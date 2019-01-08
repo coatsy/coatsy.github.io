@@ -1,0 +1,44 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Linking Word 2007 Content Controls to Custom XML</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    3/1/2007 1:08:00 AM</time>
+<hr>
+<div id='content'><P>One of the demos I showed in <A href="http://blogs.msdn.com/acoat/archive/2007/02/27/ecma-office-open-xml-session-at-ozfox.aspx" mce_href="http://blogs.msdn.com/acoat/archive/2007/02/27/ecma-office-open-xml-session-at-ozfox.aspx">my session</A> at <A href="http://www.ozfox.com.au/" mce_href="http://www.ozfox.com.au/">OzFox</A> was inserting some new Custom XML into an existing template file and having that bound to some content controls. This makes mail merges REALLY easy. It also allows you to pick up changes to customer details made in the document itself and propagate them back to the server, because the binding between the Content Controls and the Custom XML is dynamic and bi-directional.</P>
+<P>However, doing the binding in the first place is not all that intuitive. Here is a series of steps that worked for me - note that I'm not saying it's the only, or even the best way.</P>
+<P>BTW, there's a <A href="https://channel9.msdn.com/Showpost.aspx?postid=254520" mce_href="https://channel9.msdn.com/Showpost.aspx?postid=254520">great video</A> up on Channel 9 where Matthew Scott discusses the Word 2007 Content Control Toolkit.</P>
+<H2>Step 1: Download and install the <A href="http://www.codeplex.com/dbe" mce_href="http://www.codeplex.com/dbe">Word 2007 Content Control Toolkit</A> from CodePlex.</H2>
+<P>Grab the installer, the documentation and (optionally) the source code from <A href="http://www.codeplex.com/dbe/Release/ProjectReleases.aspx" mce_href="http://www.codeplex.com/dbe/Release/ProjectReleases.aspx">here</A>.</P>
+<P>Run the MSI file and accept the defaults.</P>
+<H2>Step 2: Create a Word 2007 document to use as a template</H2>
+<P>It doesn't really matter what's in it, but you can add some placeholder text using the =rand() function if you like.</P>
+<H2>Step 3: Add Content Controls to the document</H2>
+<P>You'll need to <A href="http://blogs.msdn.com/acoat/archive/2007/02/28/enabling-the-word-2007-developer-tab.aspx" mce_href="http://blogs.msdn.com/acoat/archive/2007/02/28/enabling-the-word-2007-developer-tab.aspx">enable the developer tab</A> on the ribbon, then just drag controls from the controls group into the document:</P>
+<P>I used text controls (second from the left in the top row), but you can get fancier with Rich Text, images, combo boxes, datetime pickers etc.</P>
+<P>Highlight each control and click the properties button in the controls group of the developer toolbar.</P>
+<P><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=98 alt="Properties button" src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image07.png" width=217 border=0 mce_src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image07.png"> </P>
+<P>Give the control a sensible name.</P>
+<P><A href="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image010.png" atomicselection="true" mce_href="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image010.png"><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=335 src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image0_thumb2.png" width=290 border=0 mce_src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image0_thumb2.png"></A> </P>
+<P>Note that there are a number of other options for the control's properties. If you want the bi-directional data binding to work, make sure you don't check the "Remove content control when contents are edited" box.</P>
+<P>Do this for as many fields as you want to bind to.</P>
+<P>Save and close the document</P>
+<H2>Step 4: Add some custom XML to the document</H2>
+<P>Open the document using the Word 2007 Content Control Toolkit. </P>
+<P><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=464 alt="Word document open in the content control toolkit" src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image014.png" width=733 border=0 mce_src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image014.png"></P>
+<P>Note that at this stage there's no custom XML in the document. Click the Create a new Custom XML Part hyperlink and change to the Edit View tab and add some XML. You don't need a schema, it just needs to be well-formed XML. Here's the XML I used:</P><PRE>&lt;root&gt;<BR> &lt;name&gt;<BR>  &lt;givenName&gt;Charles&lt;/givenName&gt;<BR>  &lt;familyName&gt;Sterling&lt;/familyName&gt;<BR>  &lt;salutation&gt;Chuck&lt;/salutation&gt;<BR> &lt;/name&gt;<BR> &lt;address&gt;<BR>  &lt;location&gt;Level 9&lt;/location&gt;<BR>  &lt;street&gt;1 Eagle St&lt;/street&gt;<BR>  &lt;suburb&gt;BRISBANE&lt;/suburb&gt;<BR>  &lt;state&gt;QLD&lt;/state&gt;<BR>  &lt;postalCode&gt;4000&lt;/postalCode&gt;<BR>  &lt;country&gt;AUSTRALIA&lt;/country&gt;<BR> &lt;/address&gt;<BR>&lt;/root&gt;</PRE>
+<P><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=464 alt="Custom XML inserted" src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image018.png" width=733 border=0 mce_src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image018.png">&nbsp;</P>
+<H2>Step 5: Bind the Content Controls to custom XML nodes</H2>
+<P>Go back to Bind View and drag nodes from the tree on the right to the appropriate control on the left. Note that you need to select the node before you drag it.</P>
+<P><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=513 alt="Binding the" src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image022.png" width=827 border=0 mce_src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image022.png"> </P>
+<P>Save the document and open it in Word. </P>
+<P><IMG style="BORDER-RIGHT: 0px; BORDER-TOP: 0px; BORDER-LEFT: 0px; BORDER-BOTTOM: 0px" height=355 alt="Document with data from Custom XML" src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image03.png" width=715 border=0 mce_src="http://candrew.members.winisp.net/blogimages/LinkingWord2007ContentControlstoCustomXM_104DC/image03.png"> </P>
+<P>Now change something (for example change the salutation from "Chuck" to "Charles"). Save and close the file and open it using the Content Control Toolkit. Notice that the XML has been changed.</P></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

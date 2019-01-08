@@ -1,0 +1,150 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>WPF? Pah!</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    4/1/2007 12:31:00 AM</time>
+<hr>
+<div id='content'><P>I'm sitting in <A href="http://jcooney.net/archive/2007/02/01/42999.aspx" mce_href="http://jcooney.net/archive/2007/02/01/42999.aspx">Joseph Cooney's</A> (excellent) session on <A href="http://msdn2.microsoft.com/en-us/netframework/aa663326.aspx" mce_href="http://msdn2.microsoft.com/en-us/netframework/aa663326.aspx">WPF</A> at <A href="http://www.codecampoz.com/" mce_href="http://www.codecampoz.com/">CodeCampOz</A>, and it seems to me that the canonical demo of WPF is an animated button bouncing around a form. Of course, this is something VFP has been able to do for ever:</P><PRE class=csharpcode>**************************************************
+*-- Form:         form1 
+*-- ParentClass:  form
+*-- BaseClass:    form
+*-- Time Stamp:   04/01/07 02:18:00 PM
+*
+DEFINE <SPAN class=kwrd>CLASS</SPAN> form1 <SPAN class=kwrd>AS</SPAN> form
+
+
+    DoCreate = .T.
+    Caption = <SPAN class=str>"Form1"</SPAN>
+    llanimating = .F.
+    ndirection = 0
+    nspeed = 0
+    Name = <SPAN class=str>"Form1"</SPAN>
+
+
+    ADD <SPAN class=kwrd>OBJECT</SPAN> command1 <SPAN class=kwrd>AS</SPAN> commandbutton <SPAN class=kwrd>WITH</SPAN> ;
+        Top = 60, ;
+        Left = 108, ;
+        Height = 109, ;
+        Width = 157, ;
+        Caption = <SPAN class=str>"Command1"</SPAN>, ;
+        Name = <SPAN class=str>"Command1"</SPAN>
+
+
+    ADD <SPAN class=kwrd>OBJECT</SPAN> timer1 <SPAN class=kwrd>AS</SPAN> timer <SPAN class=kwrd>WITH</SPAN> ;
+        Top = 216, ;
+        Left = 336, ;
+        Height = 23, ;
+        Width = 23, ;
+        Interval = 50, ;
+        Name = <SPAN class=str>"Timer1"</SPAN>
+
+
+    PROCEDURE llanimating_assign
+        LPARAMETERS vNewVal
+        *<SPAN class=kwrd>To</SPAN> <SPAN class=kwrd>do</SPAN>: Modify this routine <SPAN class=kwrd>for</SPAN> the Assign method
+        THIS.llAnimating = m.vNewVal
+        this.Timer1.Enabled = this.llanimating
+        <SPAN class=kwrd>IF</SPAN> ! this.llAnimating
+            this.ResetButton
+        <SPAN class=kwrd>ELSE</SPAN>
+            this.nDirection = RAND() * 2 * PI()
+            this.nSpeed = INT(RAND() * 10) + 1
+            this.Command1.BackColor = RAND() * 0xFFFFFF
+        <SPAN class=kwrd>endif</SPAN>
+    ENDPROC
+
+
+    PROCEDURE resetbutton
+        * Reset the button <SPAN class=kwrd>to</SPAN> <SPAN class=kwrd>default</SPAN> values
+
+        this.Command1.Top = INT(this.Height/2 - this.Command1.Height/2)
+        this.Command1.Left = INT(this.Width/2 - this.Command1.Width/2)
+
+        this.Command1.ResetToDefault(<SPAN class=str>"BackColor"</SPAN>)
+    ENDPROC
+
+
+    PROCEDURE movebutton
+        <SPAN class=kwrd>WITH</SPAN> this.Command1
+
+            * move the button by (nSpeed) <SPAN class=kwrd>in</SPAN> the (nDirection) direction
+            .top = .top + (.Parent.nSpeed * COS(.Parent.nDirection))
+            .Left = .Left + (.Parent.nSpeed * SIN(.Parent.nDirection))
+
+            * check <SPAN class=kwrd>to</SPAN> see whether we<SPAN class=rem>'ve hit a wall</SPAN>
+            <SPAN class=kwrd>IF</SPAN> .Left &lt; 0
+                .Parent.nDirection = 2* PI() - .Parent.nDirection
+                .BackColor = RAND() * 0xFFFFFF
+            <SPAN class=kwrd>ENDIF</SPAN>
+
+            <SPAN class=kwrd>IF</SPAN> .Top &lt; 0
+                .Parent.nDirection = PI() - .Parent.nDirection
+                .BackColor = RAND() * 0xFFFFFF
+            <SPAN class=kwrd>ENDIF</SPAN>
+
+            <SPAN class=kwrd>IF</SPAN> .Left + .Width &gt; .Parent.Width
+                .Parent.nDirection = 2* PI() - .Parent.nDirection
+                .BackColor = RAND() * 0xFFFFFF
+            <SPAN class=kwrd>ENDIF</SPAN>
+
+            <SPAN class=kwrd>IF</SPAN> .top + .height &gt; .Parent.Height
+                .Parent.nDirection = PI() - .Parent.nDirection
+                .BackColor = RAND() * 0xFFFFFF
+            <SPAN class=kwrd>ENDIF</SPAN>
+
+
+        endwith
+    ENDPROC
+
+
+    PROCEDURE command1.Click
+        thisform.llAnimating = !thisform.llanimating
+    ENDPROC
+
+
+    PROCEDURE timer1.Timer
+        thisform.movebutton()
+    ENDPROC
+
+
+ENDDEFINE
+*
+*-- EndDefine: form1
+**************************************************
+</PRE>
+<STYLE type=text/css>.csharpcode, .csharpcode pre
+{
+	font-size: small;
+	color: black;
+	font-family: consolas, "Courier New", courier, monospace;
+	background-color: #ffffff;
+	/*white-space: pre;*/
+}
+.csharpcode pre { margin: 0em; }
+.csharpcode .rem { color: #008000; }
+.csharpcode .kwrd { color: #0000ff; }
+.csharpcode .str { color: #006080; }
+.csharpcode .op { color: #0000c0; }
+.csharpcode .preproc { color: #cc6633; }
+.csharpcode .asp { background-color: #ffff00; }
+.csharpcode .html { color: #800000; }
+.csharpcode .attr { color: #ff0000; }
+.csharpcode .alt 
+{
+	background-color: #f4f4f4;
+	width: 100%;
+	margin: 0em;
+}
+.csharpcode .lnum { color: #606060; }
+</STYLE>
+
+<P>Enjoy!</P></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

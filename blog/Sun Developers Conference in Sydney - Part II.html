@@ -1,0 +1,34 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Sun Developers Conference in Sydney - Part II</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    3/30/2006 7:41:00 AM</time>
+<hr>
+<div id='content'><img alt="Badge" src="http://candrew.members.winisp.net/blogimages/Badge_small.jpg" align="right" border="0">This afternoon was spent on some more detailed presentations (and yes <a href="http://www.dotnetperformance.com/">Nick</a>, my badge does say Microsoft).
+
+
+
+First up was a session on performance tuning GlassFish - Sun's next version of their Application Server. <a href="http://blogs.sun.com/roller/page/tomdaly">Tom Daley</a> presented this to about 40 people (there were two tracks running by this stage). Tom obviously knows the ins and outs of both the App server and the various databases to which he connects it.&nbsp;It was interesting to see how much effort Tom (and other speakers) put into not mentioning the word Microsoft, for example when listing members of TPC. I have to admit that a lot of this session went over my head, but I'm sure that'd be the same if someone like David Lean gave a similarly themed talk on tuning SQL Server. The bottom line that I took away from this presentation was that when you do tuning, consider the whole stack. the other useful tidbit I picked up was that Solaris has disk write caching turned off by default.
+
+Next up was Lee Chuck-Munn (LCM) on Interoperability using Advanced Web Services. This was also in track 2, but a heap of people came in from the other track to pretty much double the numbers from Tom's session.
+
+One of the big advances in JSE5 (and JEE5) is the addition of the concept of annotations. This means that instead of writing a huge amount of code to expose a class as a web service, one merely now needs to import a namespace, decorate the class with the annotation <code>@WebService</code> and the methods with the annotation <code>@WebMethod</code>. Both of these annotations can take parameters so you've got much more granular control over what's actually emitted. The compiler then adds the code to do the heavy lifting. Astute readers will recognise this pattern from elsewhere <img src="http://candrew.members.winisp.net/blogimages/smile1.gif">. It still seems like the tool support is not quite complete for this, there are a number of manual steps that need to be taken before the web service is deployed.
+
+Some cool things about this session were 
+
+<ul>  <li>the reference/test app Sun ship so you can check that your application can talk at the WS-I basic profile level.</li>  <li>the fact that Sun have committed to making their Web Service stack work with WCF (still referred to by LCM as Indigo)</li></ul>
+
+The final session of the day was a 90 minute marathon by Doris Chen on JavaServer Faces and Java Studio Creator. The theme for this session and the parallel one (on Windows Client Development) was "Code Camp", but I have to say it wasn't much like the <a href="http://www.codecampoz.com/">CodeCamp</a> I know. There wasn't even a demo for the first hour. Tough going at the end of the day.
+
+Having said that, there's some nice bits in JSF, and the Creator tool is very nice indeed. The basic premise of JSF is Model-View-Controller and it allows you to mark up a page - ASP.NET-style - and have server-side actions taken. This means that you can emit different markup based on things like browser capabilities etc. The IDE is very nice. Looks a lot like VS and has some of the same capabilities, including drag-n-drop data binding.
+
+<p>All-in-all a good day. I've had a couple of polite enquiries from attendees about what I'm doing there, but I haven't yet had to ask myself the same thing. Looking forward to tomorrow's sessions.</p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

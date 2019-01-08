@@ -1,0 +1,175 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Resize Images - a Thumbnail Maker</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    5/8/2007 9:40:00 AM</time>
+<hr>
+<div id='content'><P><A href="media/TNBlogsFS/BlogFileStorage/blogs_msdn/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B120%5D%5B1%5D.jpg" original-url="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B120%5D%5B1%5D.jpg" mce_href="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B120%5D%5B1%5D.jpg">Nic</A> was hanging out with <A href="http://www.nickhodge.com/blog/" mce_href="http://www.nickhodge.com/blog/">Nick</A> (a combination that's just asking for trouble if you ask me) a couple of weeks ago near my desk, and Nic was <A href="http://onten.net/Blogs/nic/vso-image-resizer-free--handy/" mce_href="http://onten.net/Blogs/nic/vso-image-resizer-free--handy/">bemoaning</A> the lack of a resizing utility. This triggered something in the back of my mind and lo! I found a <A href="http://west-wind.com/weblog/posts/283.aspx" mce_href="http://west-wind.com/weblog/posts/283.aspx">post</A> by <A href="http://west-wind.com/weblog/" mce_href="http://west-wind.com/weblog/">Rick Strahl</A> on (almost) this very thing. I tweaked the code a little to turn it into a console app from a web app and built it.</P>
+<P>I added a shortcut to the exe both on my desktop and in my SendTo folder so now I can right-click on an image or images and send it to the resizer and it will do its magic.</P>
+<P><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=960 src="media/TNBlogsFS/BlogFileStorage/blogs_msdn/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B3%5D.jpg" original-url="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B3%5D.jpg" width=1280 border=0 mce_src="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B3%5D.jpg"> </P>
+<P>(508k) turns into this (23k):</P><IMG style="BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px" height=90 src="media/TNBlogsFS/BlogFileStorage/blogs_msdn/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B120%5D%5B3%5D.jpg" original-url="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B120%5D%5B3%5D.jpg" width=120 border=0 mce_src="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/ResizeImagesaThumbnailMaker_14CDF/David%20treadwell%20and%20Adam%20Cogan%20rDSC00067%5B120%5D%5B3%5D.jpg"> 
+<P>Pretty cool!</P>
+<P>Here's the code - most of it pinched directly from Rick remember. Note that in its current form, it makes the maximum dimension of the thumbnail 120px. You can change that at the top. I've also attached a zipped version of the solution to this post. Of course, this is provided as-is with no guarantees of stability, suitability or any other -ability. Use at your own risk, contents may be hot, don't run with scissors etc.</P>
+<P>You could add some nice bits like:</P>
+<UL>
+<LI>the ability to detect that it had been passed a folder and have the code traverse the folder and resize all the images therein.</LI>
+<LI>the ability to set the max size as part of the command line</LI>
+<LI>the ability to specify an output folder for files</LI>
+<LI>Actually handling the exceptions in ErrorResult() :)</LI></UL>
+<P>Anyway, enough already. Go play!</P>
+<P mce_keep="true">&nbsp;</P><PRE class=code><SPAN style="COLOR: rgb(0,0,255)">using</SPAN> System;
+<SPAN style="COLOR: rgb(0,0,255)">using</SPAN> System.Collections.Generic;
+<SPAN style="COLOR: rgb(0,0,255)">using</SPAN> System.Text;
+<SPAN style="COLOR: rgb(0,0,255)">using</SPAN> System.Drawing;
+<SPAN style="COLOR: rgb(0,0,255)">using</SPAN> System.Drawing.Imaging;
+<SPAN style="COLOR: rgb(0,0,255)">using</SPAN> System.IO;
+
+
+<SPAN style="COLOR: rgb(0,0,255)">namespace</SPAN> Resizer
+{
+    <SPAN style="COLOR: rgb(0,0,255)">enum</SPAN> <SPAN style="COLOR: rgb(43,145,175)">ImageSize
+</SPAN>    {
+        Default = 120,
+        Small = 120,
+        Medium = 240,
+        Large = 480,
+        Custom
+    }
+    <SPAN style="COLOR: rgb(0,0,255)">class</SPAN> <SPAN style="COLOR: rgb(43,145,175)">Program
+</SPAN>    {
+        <SPAN style="COLOR: rgb(0,0,255)">static</SPAN> <SPAN style="COLOR: rgb(0,0,255)">void</SPAN> Main(<SPAN style="COLOR: rgb(0,0,255)">string</SPAN>[] args)
+        {
+            <SPAN style="COLOR: rgb(0,0,255)">foreach</SPAN> (<SPAN style="COLOR: rgb(0,0,255)">string</SPAN> Image <SPAN style="COLOR: rgb(0,0,255)">in</SPAN> args)
+            {
+                <SPAN style="COLOR: rgb(0,128,0)">// string Image = args[0];
+</SPAN>                <SPAN style="COLOR: rgb(0,0,255)">if</SPAN> (Image == <SPAN style="COLOR: rgb(0,0,255)">null</SPAN>)
+                {
+                    ErrorResult();
+                    <SPAN style="COLOR: rgb(0,0,255)">return</SPAN>;
+                }
+
+
+                <SPAN style="COLOR: rgb(0,0,255)">int</SPAN> Size = (<SPAN style="COLOR: rgb(0,0,255)">int</SPAN>)<SPAN style="COLOR: rgb(43,145,175)">ImageSize</SPAN>.Default;
+
+                <SPAN style="COLOR: rgb(0,128,0)">//if (args.Length &gt; 1)
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//{
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//    string sSize = args[1];
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//    if (sSize != null)
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//        Size = Int32.Parse(sSize);
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//}
+
+</SPAN>                <SPAN style="COLOR: rgb(0,0,255)">string</SPAN> Path = Image;
+                <SPAN style="COLOR: rgb(43,145,175)">Bitmap</SPAN> bmp = CreateThumbnail(Path, Size, Size);
+
+                <SPAN style="COLOR: rgb(0,0,255)">if</SPAN> (bmp == <SPAN style="COLOR: rgb(0,0,255)">null</SPAN>)
+                {
+                    ErrorResult();
+                    <SPAN style="COLOR: rgb(0,0,255)">return</SPAN>;
+                }
+
+                <SPAN style="COLOR: rgb(0,0,255)">string</SPAN> OutputFilename = <SPAN style="COLOR: rgb(0,0,255)">null</SPAN>;
+                <SPAN style="COLOR: rgb(43,145,175)">FileInfo</SPAN> OutputFile = <SPAN style="COLOR: rgb(0,0,255)">new</SPAN> <SPAN style="COLOR: rgb(43,145,175)">FileInfo</SPAN>(Path);
+                OutputFilename = OutputFile.DirectoryName + <SPAN style="COLOR: rgb(163,21,21)">"\\"</SPAN> + OutputFile.Name.Remove(OutputFile.Name.Length - (OutputFile.Extension.Length)) + <SPAN style="COLOR: rgb(163,21,21)">"["</SPAN> + Size.ToString().Trim() + <SPAN style="COLOR: rgb(163,21,21)">"]"</SPAN> + OutputFile.Extension;
+
+                <SPAN style="COLOR: rgb(0,0,255)">if</SPAN> (OutputFilename != <SPAN style="COLOR: rgb(0,0,255)">null</SPAN>)
+                {
+                    <SPAN style="COLOR: rgb(0,0,255)">try
+</SPAN>                    {
+                        bmp.Save(OutputFilename);
+                    }
+
+                    <SPAN style="COLOR: rgb(0,0,255)">catch</SPAN> (<SPAN style="COLOR: rgb(43,145,175)">Exception</SPAN> ex)
+                    {
+                        bmp.Dispose();
+                        ErrorResult();
+                        <SPAN style="COLOR: rgb(0,0,255)">return</SPAN>;
+                    }
+                }
+
+                bmp.Dispose();
+                
+            }
+
+        }
+
+        <SPAN style="COLOR: rgb(0,0,255)">private</SPAN> <SPAN style="COLOR: rgb(0,0,255)">static</SPAN> <SPAN style="COLOR: rgb(0,0,255)">void</SPAN> ErrorResult()
+        {
+            <SPAN style="COLOR: rgb(0,128,0)">//throw new Exception("The method or operation is not implemented.");
+</SPAN>        }
+
+        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> 
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> Creates a resized bitmap from an existing image on disk.
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> Call Dispose on the returned Bitmap object
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> 
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> Taken from Rick Strahl's code at 
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> http://west-wind.com/weblog/posts/283.aspx
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> 
+</SPAN>        <SPAN style="COLOR: rgb(128,128,128)">///</SPAN><SPAN style="COLOR: rgb(0,128,0)"> Bitmap or null
+
+</SPAN>        <SPAN style="COLOR: rgb(0,0,255)">public</SPAN> <SPAN style="COLOR: rgb(0,0,255)">static</SPAN> <SPAN style="COLOR: rgb(43,145,175)">Bitmap</SPAN> CreateThumbnail(<SPAN style="COLOR: rgb(0,0,255)">string</SPAN> lcFilename, <SPAN style="COLOR: rgb(0,0,255)">int</SPAN> lnWidth, <SPAN style="COLOR: rgb(0,0,255)">int</SPAN> lnHeight)
+        {
+            <SPAN style="COLOR: rgb(43,145,175)">Bitmap</SPAN> bmpOut = <SPAN style="COLOR: rgb(0,0,255)">null</SPAN>;
+
+            <SPAN style="COLOR: rgb(0,0,255)">try
+</SPAN>            {
+
+                <SPAN style="COLOR: rgb(43,145,175)">Bitmap</SPAN> loBMP = <SPAN style="COLOR: rgb(0,0,255)">new</SPAN> <SPAN style="COLOR: rgb(43,145,175)">Bitmap</SPAN>(lcFilename);
+                <SPAN style="COLOR: rgb(43,145,175)">ImageFormat</SPAN> loFormat = loBMP.RawFormat;
+                <SPAN style="COLOR: rgb(0,0,255)">decimal</SPAN> lnRatio;
+                <SPAN style="COLOR: rgb(0,0,255)">int</SPAN> lnNewWidth = 0;
+                <SPAN style="COLOR: rgb(0,0,255)">int</SPAN> lnNewHeight = 0;
+
+                <SPAN style="COLOR: rgb(0,128,0)">//*** If the image is smaller than a thumbnail just return it
+</SPAN>                <SPAN style="COLOR: rgb(0,0,255)">if</SPAN> (loBMP.Width &lt; lnWidth &amp;&amp; loBMP.Height &lt; lnHeight)
+                    <SPAN style="COLOR: rgb(0,0,255)">return</SPAN> loBMP;
+
+                <SPAN style="COLOR: rgb(0,0,255)">if</SPAN> (loBMP.Width &gt; loBMP.Height)
+                {
+                    lnRatio = (<SPAN style="COLOR: rgb(0,0,255)">decimal</SPAN>)lnWidth / loBMP.Width;
+                    lnNewWidth = lnWidth;
+                    <SPAN style="COLOR: rgb(0,0,255)">decimal</SPAN> lnTemp = loBMP.Height * lnRatio;
+                    lnNewHeight = (<SPAN style="COLOR: rgb(0,0,255)">int</SPAN>)lnTemp;
+                }
+                <SPAN style="COLOR: rgb(0,0,255)">else
+</SPAN>                {
+                    lnRatio = (<SPAN style="COLOR: rgb(0,0,255)">decimal</SPAN>)lnHeight / loBMP.Height;
+                    lnNewHeight = lnHeight;
+                    <SPAN style="COLOR: rgb(0,0,255)">decimal</SPAN> lnTemp = loBMP.Width * lnRatio;
+                    lnNewWidth = (<SPAN style="COLOR: rgb(0,0,255)">int</SPAN>)lnTemp;
+                }
+
+                <SPAN style="COLOR: rgb(0,128,0)">// System.Drawing.Image imgOut = 
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//      loBMP.GetThumbnailImage(lnNewWidth,lnNewHeight,
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">//                              null,IntPtr.Zero);
+
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">// *** This code creates cleaner (though bigger) thumbnails and properly
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">// *** and handles GIF files better by generating a white background for
+</SPAN>                <SPAN style="COLOR: rgb(0,128,0)">// *** transparent images (as opposed to black)
+
+</SPAN>                bmpOut = <SPAN style="COLOR: rgb(0,0,255)">new</SPAN> <SPAN style="COLOR: rgb(43,145,175)">Bitmap</SPAN>(lnNewWidth, lnNewHeight);
+                <SPAN style="COLOR: rgb(43,145,175)">Graphics</SPAN> g = <SPAN style="COLOR: rgb(43,145,175)">Graphics</SPAN>.FromImage(bmpOut);
+                g.InterpolationMode = System.Drawing.Drawing2D.<SPAN style="COLOR: rgb(43,145,175)">InterpolationMode</SPAN>.HighQualityBicubic;
+                g.FillRectangle(<SPAN style="COLOR: rgb(43,145,175)">Brushes</SPAN>.White, 0, 0, lnNewWidth, lnNewHeight);
+                g.DrawImage(loBMP, 0, 0, lnNewWidth, lnNewHeight);
+
+                loBMP.Dispose();
+            }
+            <SPAN style="COLOR: rgb(0,0,255)">catch
+</SPAN>            {
+                <SPAN style="COLOR: rgb(0,0,255)">return</SPAN> <SPAN style="COLOR: rgb(0,0,255)">null</SPAN>;
+            }
+            <SPAN style="COLOR: rgb(0,0,255)">return</SPAN> bmpOut;
+        }
+    }
+}
+</PRE><A href="http://11011.net/software/vspaste" mce_href="http://11011.net/software/vspaste"></A>
+<p><a href="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/02/47/95/54/Resizer.zip" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/communityserver-components-postattachments/00-02-47-95-54/Resizer.zip">Resizer.zip</a></p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

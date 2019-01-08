@@ -1,0 +1,277 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Document Creation and Conversion with the OpenXML SDK and SharePoint 2010 Word Automation Services &ndash; Part 1</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    6/19/2010 12:07:00 AM</time>
+<hr>
+<div id='content'><p><span style="font-size: xx-small;"><span style="color: #ff0000;">Update 2011-04-06</span> I Finally got around to writing </span><a href="http://blogs.msdn.com/b/acoat/archive/2011/04/06/document-creation-and-conversion-with-the-openxml-sdk-and-sharepoint-2010-word-automation-services-part-2.aspx"><span style="font-size: xx-small;">Part 2 of this post</span></a><span style="font-size: xx-small;">.</span></p>
+<p>I had the pleasure this week of presenting at the <a target="_blank" href="http://www.sharepointconference.com.au">Australian SharePoint Conference</a> &ndash; much kudos to NZ SharePoint MVPs <a target="_blank" href="https://mvp.support.microsoft.com/profile=D9327EFC-E5D3-4C11-AF08-FBC822E5BAB1">Debbie Ireland</a> and <a target="_blank" href="https://mvp.support.microsoft.com/profile=A62A11C2-57B2-4D41-B8F4-82763C85CF52">Mark Orange</a>, and local SharePoint MVPs/community folk <a target="_blank" href="https://mvp.support.microsoft.com/profile=2652DE05-CB58-4917-85F5-760D7EC6D33C">James Milne</a>, <a target="_blank" href="http://au.linkedin.com/in/brendanlaw">Brendan Law</a> and <a target="_blank" href="https://mvp.support.microsoft.com/profile=C3D5DB0D-8B80-47B8-95AF-F9995402EF93">Kathy Hughes</a> and the team for putting on such a great event.</p>
+<p>My session was entitled "Creating and manipulating documents with Word Services and Open XML" and covered the use of the <a target="_blank" href="http://www.microsoft.com/downloads/details.aspx?FamilyID=c6e744e5-36e9-45f5-8d8c-331df206e0d0&amp;DisplayLang=en">OpenXML SDK</a> and a new feature in SharePoint 2010 (Standard and above) called Word Automation Services. I've uploaded the deck to my SkyDrive, and you can grab it from <a target="_blank" href="http://cid-0ed0f7c4e28d239e.office.live.com/view.aspx/Public/AUSSPC^_Coates.pptx">there</a>.</p>
+<h1>Disclaimer</h1>
+<p>I stole a bunch of the code I showed (or at least the concepts for it) from <a target="_blank" href="http://blogs.msdn.com/b/ericwhite/">Eric White</a>'s excellent blog, several posts from the <a target="_blank" href="http://blogs.msdn.com/b/microsoft_office_word/">Word Team</a> and from MSDN:</p>
+<ul>
+<li><a target="_blank" href="http://blogs.msdn.com/b/ericwhite/archive/2010/03/17/developing-with-sharepoint-2010-word-automation-services.aspx">Developing with SharePoint 2010 Word Automation Services</a> </li>
+<li><a href="http://blogs.msdn.com/b/microsoft_office_word/archive/2009/10/26/introducing-word-automation-services.aspx">Introducing Word Automation Services</a> </li>
+<li><a href="http://blogs.msdn.com/b/microsoft_office_word/archive/2009/12/16/word-automation-services_3a00_-what-it-does.aspx">Word Automation Services: What It Does</a> </li>
+<li><a href="http://msdn.microsoft.com/en-us/library/ee557736(office.14).aspx">Programming Word Automation Services</a> </li>
+<li><a href="http://msdn.microsoft.com/en-us/library/ff433638(office.14).aspx">Building Document Generation Systems from Templates using Word 2007 and Word 2010</a> </li>
+</ul>
+<h1>Development Environment</h1>
+<p>I ran these demos on a HP Envy 15 with 8 GB of RAM, a Core i7 processor running Windows 7 x64 and with both SharePoint 2010 and Visual Studio 2010 installed. </p>
+<p>See the MSDN Article "<a target="_blank" href="http://msdn.microsoft.com/en-us/library/ee554869(office.14).aspx">Setting Up the Development Environment for SharePoint 2010 on Windows Vista, Windows 7, and Windows Server 2008</a>"for information on how to set up your development environment for SharePoint development and then read <a target="_blank" href="http://blogs.msdn.com/b/bethmassi/">Beth Massi</a>'s notes on that article to actually get it working &ndash; "<a target="_blank" href="http://blogs.msdn.com/b/bethmassi/archive/2009/12/02/setting-up-windows-7-for-office-sharepoint-2010-beta-development.aspx">Setting up Windows 7 for Office &amp; SharePoint 2010 Beta Development</a>".</p>
+<p>I installed the OpenXML SDK 2.0 &ndash; <a target="_blank" href="http://www.microsoft.com/downloads/details.aspx?FamilyID=c6e744e5-36e9-45f5-8d8c-331df206e0d0&amp;DisplayLang=en">download from here</a>, <a target="_blank" href="http://msdn.microsoft.com/en-us/library/bb448854.aspx">documentation here</a>.</p>
+<p>I also installed the <a target="_blank" href="http://visualstudiogallery.msdn.microsoft.com/en-us/d0d33361-18e2-46c0-8ff2-4adea1e34fef">Visual Studio 2010 Pro Power Tools</a>. If you don't have this wonderful set of tools installed on your machine stop reading this now and go and install them. I mean it. Right now!</p>
+<h1>Demo Code</h1>
+<h2>Set up a Windows Form to call your code from</h2>
+<p>I built a Winforms app to demonstrate the document creation concepts and if you want to follow along, you can do the same. You know the drill, File|New Project, or just New Project from the VS2010 Start Page</p>
+<p><img height="450" width="800" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/0020.image_5.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/0020.image_5F00_5.png" alt="Create a new WinForms Project" border="0" title="Create a new WinForms Project" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>Notice I've used a C# project for this. A later step, reflecting the template document, results in C# code that you'll put into a class in this project so that's why I used C#. I guess you could put the reflected code into a separate class library project and do the rest in VB.NET if you like. I'll leave that as a exercise for the reader.</p>
+<p>Drop 4 Buttons and a NumericUpDown on the form and set some properties as follows</p>
+<table cellpadding="2" cellspacing="0" border="1">
+<tbody>
+<tr>
+<th valign="top">Control</th><th valign="top">Name</th><th valign="top">Text</th>
+</tr>
+<tr>
+<td valign="top">button1</td>
+<td valign="top">CreateOneDocumentLocallyButton</td>
+<td valign="top">Create One Document Locally</td>
+</tr>
+<tr>
+<td valign="top">button2</td>
+<td valign="top">CreateManyDocumentsLocallyButton</td>
+<td valign="top">Create Many Documents Locally</td>
+</tr>
+<tr>
+<td valign="top">button3</td>
+<td valign="top">CreateOneSharePointDocumentButton</td>
+<td valign="top">Create One Document on SharePoint</td>
+</tr>
+<tr>
+<td valign="top">button4</td>
+<td valign="top">CreateManySharePointDocumentsButton</td>
+<td valign="top">Create Many Documents on SharePoint</td>
+</tr>
+</tbody>
+</table>
+<p>and</p>
+<table cellpadding="2" cellspacing="0" border="1">
+<tbody>
+<tr>
+<th valign="top">Control</th><th valign="top">Name</th><th valign="top">Increment</th><th valign="top">Maximum</th><th valign="top">Minimum</th><th valign="top">Value</th>
+</tr>
+<tr>
+<td valign="top">numericUpDown1</td>
+<td valign="top">NumberOfDocuments</td>
+<td valign="top">100</td>
+<td valign="top">1000</td>
+<td valign="top">0</td>
+<td valign="top">100</td>
+</tr>
+</tbody>
+</table>
+<p>You should have a form that looks a bit like this:</p>
+<p><img height="186" width="367" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/3833.image_6.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/3833.image_5F00_6.png" alt="Form layout" border="0" title="Form layout" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<h2>Generate a Document using the OpenXML SDK</h2>
+<p>Now it's time to actually generate the document using the OpenXML SDK. </p>
+<p>The first thing to do is separate your generation code from your UI, so double-click on the CreateOneDocumentLocallyButton button to generate a click event handler and then in the event.</p>
+<p>In the Form1 class definition, before the constructor, instantiate a new DocGenerator class (don't worry that you haven't created a class definition yet, you will in a sec):</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:4f07e32c-eae2-4ff5-9a74-477a835cae90" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap">DocGenerator gen = <span style="color:#0000ff">new</span> DocGenerator();</div>
+</div>
+</div>
+<p>In the button click event, call the DocGenerator's CreateOneDocumentLocally method and then show a MessageBox to confirm that something's happened. Your form code should look like this:</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:c7161f47-1e73-4793-8e35-b96ff038ff69" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background: #ddd; overflow: auto"><ol style="background: #ffffca; margin: 0 0 0 2.5em; padding: 0 0 0 5px; white-space: nowrap">
+<li><span style="color:#0000ff">using</span> System;</li>
+<li><span style="color:#0000ff">using</span> System.Collections.Generic;</li>
+<li><span style="color:#0000ff">using</span> System.ComponentModel;</li>
+<li><span style="color:#0000ff">using</span> System.Data;</li>
+<li><span style="color:#0000ff">using</span> System.Drawing;</li>
+<li><span style="color:#0000ff">using</span> System.Linq;</li>
+<li><span style="color:#0000ff">using</span> System.Text;</li>
+<li><span style="color:#0000ff">using</span> System.Windows.Forms;</li>
+<li>&nbsp;</li>
+<li><span style="color:#0000ff">namespace</span> OpenXMLDocumentGeneration</li>
+<li>{</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">public</span> <span style="color:#0000ff">partial</span> <span style="color:#0000ff">class</span> <span style="color:#2b91af">Form1</span> : <span style="color:#2b91af">Form</span></li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DocGenerator gen = <span style="color:#0000ff">new</span> DocGenerator();</li>
+<li>&nbsp;</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">public</span> Form1()</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;InitializeComponent();</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+<li>&nbsp;</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">private</span> <span style="color:#0000ff">void</span> CreateOneDocumentLocallyButton_Click(<span style="color:#0000ff">object</span> sender, <span style="color:#2b91af">EventArgs</span> e)</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gen.CreateOneDocumentLocally();</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">MessageBox</span>.Show(<span style="color:#a31515">"Done"</span>);</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+<li>}</li>
+</ol></div>
+</div>
+</div>
+<p>Now it's time for the Visual Studio Magic&trade;. Position your cursor somewhere on the word DocGenerator (in Line 14 above) and press Ctrl+. (that's hold the Control key down and press the full stop, or period button). A Smart Tag will pop up offering to either generate a new class for Doc Generator or a new type.</p>
+<p><img height="100" width="408" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/8510.image_7.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/8510.image_5F00_7.png" alt="Generate new class or type smart tag" border="0" title="Generate new class or type smart tag" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>If you choose Generate New Type, you'll get a dialog offering to generate one of four different types, with a number of access&nbsp; options and decisions to be made about where the type definition should be stored:</p>
+<p><img height="403" width="374" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/7345.image_10.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/7345.image_5F00_10.png" alt="The Generate New Type dialog gives you lots of options" border="0" title="The Generate New Type dialog gives you lots of options" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>If you choose the default Generate class option though, Visual Studio will generate a new class file with the same name as the class being defined (in this case, DocGenerator) and a class definition for that class in the default namespace.</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:acfd10af-bccc-487c-bec9-826f51cad409" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">using</span> System;<br /><span style="color:#0000ff">using</span> System.Collections.Generic;<br /><span style="color:#0000ff">using</span> System.Linq;<br /><span style="color:#0000ff">using</span> System.Text;<br /><br /><span style="color:#0000ff">namespace</span> OpenXMLDocumentGeneration<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">class</span> <span style="color:#2b91af">DocGenerator</span><br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />}</div>
+</div>
+</div>
+<p>This is a great time-saving feature that allows you to work from the inside-out with your creation of types.</p>
+<p>The same technique works for defining the methods on the class. Putting&nbsp; the cursor somewhere in the gen.CreateOneDocumentLocally() text (in line 23 above) and pressing Ctrl+. will prompt you to create a method stub for the method you've yet to define.</p>
+<p><img height="84" width="709" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/3632.image_13.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/3632.image_5F00_13.png" alt="Generate a method stub for the hereto undefined method." border="0" title="Generate a method stub for the hereto undefined method." style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>Now you need to add the code that will generate the document.</p>
+<p>The first thing to do is add a couple of references to the project. Right-click on your project in the Solution Explorer and choose Add Reference. If you've done what I told you you should above and installed the <a target="_blank" href="http://visualstudiogallery.msdn.microsoft.com/en-us/d0d33361-18e2-46c0-8ff2-4adea1e34fef">Visual Studio 2010 Pro Power Tools</a>, you'll get a dialog that looks like this (note that assemblies that are already referenced in the project have a green "check mark" icon next to them):</p>
+<p><img height="460" width="800" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/7455.image_12.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/7455.image_5F00_12.png" alt="The new Add Reference dialog" border="0" title="The new Add Reference dialog" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>Remember that the OpenXML SDK is a set of wrappers around the System.IO.Packaging namespace, which is in the Windowsbase assembly, so you need to add references to something with OpenXML in the name, and to Windowsbase. Click in the Search Assemblies box in the top-right corner of the dialog and type "OpenXML" (without the quotes). The huge list of assemblies is filtered and just the one you want remains:</p>
+<p><img height="460" width="800" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/1172.image_16.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/1172.image_5F00_16.png" alt="Add Reference dialog filtered" border="0" title="Add Reference dialog filtered" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>Double-clicking on the assembly in the list adds the reference and the little green icon appears next to it. </p>
+<p>Do the same for the Windowsbase assembly.</p>
+<p>Now you're going to create your first programmatically-generated OpenXML document.</p>
+<p>Switch to the DocGenerator class and add a couple of using directives:</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:4adc265a-05a6-4015-98bf-d1ec3314e5cf" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">using</span> DocumentFormat.OpenXml.Packaging;<br /><span style="color:#0000ff">using</span> DocumentFormat.OpenXml.Wordprocessing;</div>
+</div>
+</div>
+<p>A very common pattern when creating OpenXML documents (and one used by the OpenXML SDK document reflector tool we'll see in a minute) is to create an OpenXML package with a using statement. </p>
+<p>In the CreateOneDocumentLocally method, delete the exception line (triple-click to select the entire line) and add the following:</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:fec948fc-096b-44c7-9aa0-27b51b3eee43" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">using</span> (<span style="color:#2b91af">WordprocessingDocument</span> package = <br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">WordprocessingDocument</span>.Create(<span style="color:#a31515">"MyFirstDocument.docx"</span>, <br />&nbsp;&nbsp;&nbsp;&nbsp;DocumentFormat.OpenXml.<span style="color:#2b91af">WordprocessingDocumentType</span>.Document))<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<br />}</div>
+</div>
+</div>
+<p>This has now created the outer container, or package (I'll examine some of the overloads of the Create method a bit later). Now you need to add some content to the package.</p>
+<p>The first thing to do is add a main document part &ndash; this is the bit that holds all of the text for the document. Inside the using statement's braces type</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:1b5638c4-b097-444d-b5da-65b4c4982c68" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap">package.AddMainDocumentPart();</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>The MainDocumentPart has a document property which holds a reference to a Document class. Create one of those now:</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:672e8a25-ab0e-40b3-8678-6a4931698259" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#2b91af">Document</span> doc = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Document</span>();</div>
+</div>
+</div>
+<p>The hierarchy of the Document object looks like this:</p>
+<p><img height="491" width="288" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/0842.image_19.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/0842.image_5F00_19.png" alt="Hierarchy of a document object" border="0" title="Hierarchy of a document object" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>So you'll new up one of each from the top down, and then append them back in the reverse order to build the hierarchy:</p>
+<p>Your method should look something like this:</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:61b16c9a-d7be-4f84-ba4b-1f9e4b686ed1" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">internal</span> <span style="color:#0000ff">void</span> CreateOneDocumentLocally()<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">using</span> (<span style="color:#2b91af">WordprocessingDocument</span> package = <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">WordprocessingDocument</span>.Create(<span style="color:#a31515">"MyFirstDocument.docx"</span>, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DocumentFormat.OpenXml.<span style="color:#2b91af">WordprocessingDocumentType</span>.Document))<br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;package.AddMainDocumentPart();<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#008000">// instantiate the members of the hierarchy</span><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">Document</span> doc = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Document</span>();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">Body</span> body = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Body</span>();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">Paragraph</span> para = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Paragraph</span>();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">Run</span> run = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Run</span>();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">Text</span> text = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Text</span>() { Text = <span style="color:#a31515">"The OpenXML SDK rocks!"</span> };<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#008000">// put the hierarchy together</span><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;run.Append(text);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;para.Append(run);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;body.Append(para);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;doc.Append(body);<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#008000">// Assign the document object to the MainDocumentPart's Document property</span><br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;package.MainDocumentPart.Document = doc;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />}</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>Moment of truth time &ndash; run the project and click the Create One Document Locally button. You should be rewarded with a MessageBox saying "Done". </p>
+<p>Close the form. </p>
+<p>Right-click on the project in Solution Explorer and choose "Open Folder in Windows Explorer". </p>
+<p>Navigate down into Bin/Debug. </p>
+<p>Double-click on MyFirstDocument.docx to open it in Word. With any luck, you should have something like this:</p>
+<p><img height="384" width="441" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/3666.image_22.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/3666.image_5F00_22.png" alt="Your first progromattically-generated OpenXML document" border="0" title="Your first progromattically-generated OpenXML document" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<h2>Document Reflection Using the OpenXML SDK 2.0 Productivity Tool</h2>
+<p>You'll have noticed that it still seemed to take a lot of code just to create a single sentence in a plain, un-themed document (although, I assure you, it's a lot less than you'd need to use if you called System.IO.Packaging directly). Fortunately, the OpenXML SDK ships with an all-purpose, Swiss Army Knife of a tool called the OpenXML SDK 2.0 Productivity Tool for Microsoft Office (I'm going to call it the OSDKT from now on). If you installed the SDK in the default location, the tool lives at C:\Program Files (x86)\Open XML SDK\V2.0\tool\OpenXmlSdkTool.exe. Take a moment now to fire it up. When it starts, it look like this:</p>
+<p><img height="306" width="603" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/7875.image_25.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/7875.image_5F00_25.png" alt="OpenXML SDK 2.0 Productivity Tool" border="0" title="OpenXML SDK 2.0 Productivity Tool" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>It's definitely worth checking out the documentation of this multi-purpose tool, but for now you'll just be using what I think is the most powerful feature, the Document Reflector. The Document reflector examines an OpenXML document and generates the code required to create the document programmatically. This means that you can start with a complex, beautifully themed document as a template, generate the code for that document and then adapt the code to include whatever makes sense (data from a database, web data, calculated information and so on).</p>
+<p>To reflect a document, click the Open File button in the OSDKT's toolbar and choose any OpenXML document. In this case, choose a Word document that doesn't support templates (usually with the extension docx). If you don't have one handy, I've uploaded one <a target="_blank" href="http://cid-0ed0f7c4e28d239e.office.live.com/view.aspx/Public/The%20OpenXML%20SDK%20Rocks.docx">here</a> for you to use.</p>
+<p>Notice that the hierarchy of the document is represented in the left side of the tool. In this screenshot I've expanded the hierarchy to show the MainDocumentPart, the Document, the Body, a Paragraph, a Run and a Text class.</p>
+<p><img height="379" width="292" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/4645.image_28.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/4645.image_5F00_28.png" alt="Open XML Hierarchy" border="0" title="Open XML Hierarchy" style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" /> </p>
+<p>Note that there are lots of other nodes in the hierarchy that you didn't add in the first, hand-coded example you tried above.</p>
+<p>Now it's time to generate the code to create this document. Select the root node of the hierarchy in the left pane of the OSDKT and then click the Reflect Code button. After a few moments, the right pane fills up with what's known in the business as a shedload of code.</p>
+<p>Click somewhere in that code and then press Ctrl+A and then Ctrl+C to copy it all to the clipboard.</p>
+<p>Switch back to Visual Studio.</p>
+<p>Right-click on the project in the Solution Explorer and choose Add Class. </p>
+<p>Call the class DocumentCreator.</p>
+<p>Press Ctrl-A and Ctrl-V to replace the default code for the class with the code you copied from the OSDKT</p>
+<p>Change the NameSpace to OpenXMLDocumentGeneration and the class name to DocumentCreator. Your class definition should look something like this:</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:169b9266-5103-4b9d-895c-ee2106976cbf" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">using</span> DocumentFormat.OpenXml.Packaging;<br /><span style="color:#0000ff">using</span> Ap = DocumentFormat.OpenXml.ExtendedProperties;<br /><span style="color:#0000ff">using</span> Vt = DocumentFormat.OpenXml.VariantTypes;<br /><span style="color:#0000ff">using</span> DocumentFormat.OpenXml;<br /><span style="color:#0000ff">using</span> DocumentFormat.OpenXml.Wordprocessing;<br /><span style="color:#0000ff">using</span> A = DocumentFormat.OpenXml.Drawing;<br /><span style="color:#0000ff">using</span> M = DocumentFormat.OpenXml.Math;<br /><span style="color:#0000ff">using</span> Ovml = DocumentFormat.OpenXml.Vml.Office;<br /><span style="color:#0000ff">using</span> V = DocumentFormat.OpenXml.Vml;<br /><span style="color:#0000ff">using</span> W14 = DocumentFormat.OpenXml.Office2010.Word;<br /><br /><span style="color:#0000ff">namespace</span> OpenXMLDocumentGeneration<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">public</span> <span style="color:#0000ff">class</span> <span style="color:#2b91af">DocumentCreator</span><br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#008000">// Creates a WordprocessingDocument.</span><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">public</span> <span style="color:#0000ff">void</span> CreatePackage(<span style="color:#0000ff">string</span> filePath)<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">using</span> (<span style="color:#2b91af">WordprocessingDocument</span> package = <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">WordprocessingDocument</span>.Create(filePath, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">WordprocessingDocumentType</span>.Document))<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CreateParts(package);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>Now all that needs to happen is to create and call this class instead of our hand-crafted code.</p>
+<p>In the DocGenerator class, add a field to hold a reference to an instance of our new DocumentCreator class as well as a base folder for output:</p>
+<p>Next, replace the contents of the CreateOneDocumentLocally method with a call to the DocumentCreator's CreatePackage method:</p>
+<p>Now remove the using directives that reference the OpenXML SDK namespaces as you don't need them in this class any more. The class should now look like this:</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:c0e412c2-4236-4f2b-9939-040c065049d2" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">using</span> System;<br /><span style="color:#0000ff">using</span> System.Collections.Generic;<br /><span style="color:#0000ff">using</span> System.Linq;<br /><span style="color:#0000ff">using</span> System.Text;<br /><br /><span style="color:#0000ff">using</span> DocumentFormat.OpenXml.Packaging;<br /><span style="color:#0000ff">using</span> DocumentFormat.OpenXml.Wordprocessing;<br /><br /><span style="color:#0000ff">namespace</span> OpenXMLDocumentGeneration<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">class</span> <span style="color:#2b91af">DocGenerator</span><br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">DocumentCreator</span> gen = <span style="color:#0000ff">new</span> <span style="color:#2b91af">DocumentCreator</span>();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">string</span> OutputFolder = <span style="color:#a31515">@"c:\temp\"</span>;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">internal</span> <span style="color:#0000ff">void</span> CreateOneDocumentLocally()<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gen.CreatePackage(OutputFolder + <span style="color:#a31515">"MyNextOpenXMLDocument.docx"</span>);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />}</div>
+</div>
+</div>
+<p>The last thing you'll do is add some code to time the creation of the document (so you can compare the different method calls later). In the Form1 code, instantiate a Stopwatch class and assign it to a field called sw then add code to reset and start the stopwatch before the document is created and to stop it and report the results when the method returns. Form1.cs should now look like this:</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:e2439772-aafe-4898-b0c5-0d81a4387d26" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">using</span> System;<br /><span style="color:#0000ff">using</span> System.Collections.Generic;<br /><span style="color:#0000ff">using</span> System.ComponentModel;<br /><span style="color:#0000ff">using</span> System.Data;<br /><span style="color:#0000ff">using</span> System.Drawing;<br /><span style="color:#0000ff">using</span> System.Linq;<br /><span style="color:#0000ff">using</span> System.Text;<br /><span style="color:#0000ff">using</span> System.Windows.Forms;<br /><span style="color:#0000ff">using</span> System.Diagnostics;<br /><br /><span style="color:#0000ff">namespace</span> OpenXMLDocumentGeneration<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">public</span> <span style="color:#0000ff">partial</span> <span style="color:#0000ff">class</span> <span style="color:#2b91af">Form1</span> : <span style="color:#2b91af">Form</span><br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">DocGenerator</span> gen = <span style="color:#0000ff">new</span> <span style="color:#2b91af">DocGenerator</span>();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">Stopwatch</span> sw = <span style="color:#0000ff">new</span> <span style="color:#2b91af">Stopwatch</span>();<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">public</span> Form1()<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;InitializeComponent();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">private</span> <span style="color:#0000ff">void</span> CreateOneDocumentLocallyButton_Click(<span style="color:#0000ff">object</span> sender, <span style="color:#2b91af">EventArgs</span> e)<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sw.Reset();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sw.Start();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gen.CreateOneDocumentLocally();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sw.Stop();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">MessageBox</span>.Show(<span style="color:#2b91af">String</span>.Format(<span style="color:#a31515">"Created one document locally in {0} ms"</span>, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sw.ElapsedMilliseconds));<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />}</div>
+</div>
+</div>
+<p>Run this project up and click the Create One Document Locally button. In my case, this resulted in a MessageBox like this:<br /><img height="154" width="279" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/0535.image_18.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/0535.image_5F00_18.png" alt="Results of the first document creation run - 347ms" border="0" title="Results of the first document creation run - 347ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /> </p>
+<p>Clicking it a couple more times gave interesting results:</p>
+<p><img height="154" width="272" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/0044.image_27.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/0044.image_5F00_27.png" alt="14ms" border="0" title="14ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /> <img height="154" width="272" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/7317.image_31.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/7317.image_5F00_31.png" alt="13ms" border="0" title="13ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /> </p>
+<p>Showing that time to actually create a document is pretty small &ndash; most of the time in the first instance is in instantiating the document creation classes.</p>
+<p>To show this even more vividly, add an event handler to the CreateManyDocumentsLocallyButton's click event that passes the value of the NumberOfDocs numericUpDown control to a method:</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:bcbe0248-3817-4c72-aa58-ff9a66fd3536" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">private</span> <span style="color:#0000ff">void</span> CreateManyDocumentsLocallyButton_Click(<span style="color:#0000ff">object</span> sender, <span style="color:#2b91af">EventArgs</span> e)<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;sw.Reset();<br />&nbsp;&nbsp;&nbsp;&nbsp;sw.Start();<br />&nbsp;&nbsp;&nbsp;&nbsp;gen.CreateManyDocumentsLocally((<span style="color:#0000ff">int</span>)NumberOfDocuments.Value);<br />&nbsp;&nbsp;&nbsp;&nbsp;sw.Stop();<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">MessageBox</span>.Show(<span style="color:#2b91af">String</span>.Format(<span style="color:#a31515">"Created {1} documents locally in {0} ms"</span>, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sw.ElapsedMilliseconds, (<span style="color:#0000ff">int</span>)NumberOfDocuments.Value));<br />}</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>CreateManyDocumentsLocally just loops through and creates that may documents:</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:426116bf-6bf2-4443-ab68-85ca7b80f6f2" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">internal</span> <span style="color:#0000ff">void</span> CreateManyDocumentsLocally(<span style="color:#0000ff">int</span> NumberOfDocs)<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#0000ff">for</span> (<span style="color:#0000ff">int</span> i = 0; i &lt; NumberOfDocs; i++)<br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gen.CreatePackage(<span style="color:#0000ff">string</span>.Format(<span style="color:#a31515">"{0}MyNextOpenXMLDocument{1:D5}.docx"</span>, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OutputFolder, i));<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br /><br />}</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>Running this with 100 documents gave me this:</p>
+<p><img height="154" width="287" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/0535.image_34.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/0535.image_5F00_34.png" alt="100 documents too 1828 ms" border="0" title="100 documents too 1828 ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /> </p>
+<p>and with 1000 documents</p>
+<p><img height="154" width="300" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/6735.image_37.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/6735.image_5F00_37.png" alt="Creating 1000 documents locally took 14935 ms" border="0" title="Creating 1000 documents locally took 14935 ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /> </p>
+<p>Finally, try using the new Parallel Task Library:</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:378b4abe-12d8-4cc1-97fd-7f5300a77c8a" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">internal</span> <span style="color:#0000ff">void</span> CreateManyDocumentsLocallyInParallel(<span style="color:#0000ff">int</span> NumberOfDocs)<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;System.Threading.Tasks.<span style="color:#2b91af">Parallel</span>.For(0, NumberOfDocs, i =&gt;<br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gen.CreatePackage(<span style="color:#0000ff">string</span>.Format(<span style="color:#a31515">"{0}MyNextOpenXMLDocument{1:D5}.docx"</span>,<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OutputFolder, i));<br />&nbsp;&nbsp;&nbsp;&nbsp;});<br /><br />}</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>and update the Form1 code that calls it to look like:</p>
+<p>&nbsp;</p>
+<div class="wlWriterEditableSmartContent" id="scid:9ce6104f-a9aa-4a17-a79f-3a39532ebf7c:f225f17e-75ce-4a62-88b9-a60bd0354bcc" style="padding-bottom: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; float: none; padding-top: 0px">
+<div class="code">
+<div style="background-color: #ffffca; overflow: auto; padding: 2px 5px; white-space: nowrap"><span style="color:#0000ff">private</span> <span style="color:#0000ff">void</span> CreateManyDocumentsLocallyButton_Click(<span style="color:#0000ff">object</span> sender, <span style="color:#2b91af">EventArgs</span> e)<br />{<br />&nbsp;&nbsp;&nbsp;&nbsp;sw.Reset();<br />&nbsp;&nbsp;&nbsp;&nbsp;sw.Start();<br />&nbsp;&nbsp;&nbsp;&nbsp;gen.CreateManyDocumentsLocallyInParallel((<span style="color:#0000ff">int</span>)NumberOfDocuments.Value);<br />&nbsp;&nbsp;&nbsp;&nbsp;sw.Stop();<br />&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#2b91af">MessageBox</span>.Show(<span style="color:#2b91af">String</span>.Format(<span style="color:#a31515">"Created {1} documents locally with Parallel Processing in {0} ms"</span>, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sw.ElapsedMilliseconds, (<span style="color:#0000ff">int</span>)NumberOfDocuments.Value));<br />}</div>
+</div>
+</div>
+<p>&nbsp;</p>
+<p>Calls to 100 and 1000 documents with Parallel processing on my quad core box only gave me about a 50% increase in performance:</p>
+<p><a href="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/4760.image_39.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/4760.image_5F00_39.png"><img height="158" width="417" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/0572.image_thumb_5.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/0572.image_5F00_thumb_5F00_5.png" alt="Creating 100 docs in parallel took 1481 ms" border="0" title="Creating 100 docs in parallel took 1481 ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /></a> <img height="154" width="420" src="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/00/39/01/metablogapi/7416.image_42.png" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/CommunityServer-Blogs-Components-WeblogFiles/00-00-00-39-01-metablogapi/7416.image_5F00_42.png" alt="Creating 1000 documents in parallel took 8992 ms" border="0" title="Creating 1000 documents in parallel took 8992 ms" style="border-bottom: 0px; border-left: 0px; display: inline; border-top: 0px; border-right: 0px" /> </p>
+<h1>Tune in next time</h1>
+<p>This concludes Part 1. In <a href="http://blogs.msdn.com/b/acoat/archive/2011/04/06/document-creation-and-conversion-with-the-openxml-sdk-and-sharepoint-2010-word-automation-services-part-2.aspx">Part 2</a>, I'll explore writing the documents to a SharePoint library instead of to a local file system and then converting the documents from docx to pdf files with no user intervention at all!</p>
+<h1>Additional Resources</h1>
+<p><a target="_blank" href="http://www.microsoft.com/downloads/details.aspx?FamilyID=83a80a0f-0906-4d7d-98e1-3dd6f58ff059&amp;displaylang=en">Download the SharePoint 2010 Developer Training Kit</a></p>
+<p>&nbsp;</p>
+<pre></pre></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

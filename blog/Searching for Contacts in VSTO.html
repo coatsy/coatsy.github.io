@@ -1,0 +1,70 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Searching for Contacts in VSTO</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    10/31/2007 6:54:00 PM</time>
+<hr>
+<div id='content'><P>I LOVE VSTO v3!</P>
+<P>As part of my demos for Graham Seach's <A href="http://www.block.net.au/devcon/index.htm" mce_href="http://www.block.net.au/devcon/index.htm">Office DevCon</A>, I've developed a <A href="http://msdn2.microsoft.com/en-au/office/aa905533.aspx" mce_href="http://msdn2.microsoft.com/en-au/office/aa905533.aspx">VSTO</A> v3 Outlook Add-in that adds a form region to an incoming e-mail if:</P>
+<OL>
+<LI>The sender is in my contacts (based on the e-mail address); and 
+<LI>The contact has a non-null, not-empty company name</LI></OL>
+<P>Here's what I did to start off with:</P><PRE class=code><SPAN style="COLOR: rgb(0,128,0)">// look up the contact from the sender of the mail
+</SPAN>Outlook.<SPAN style="COLOR: rgb(43,145,175)">MailItem</SPAN> thisMail = (Outlook.<SPAN style="COLOR: rgb(43,145,175)">MailItem</SPAN>)e.OutlookItem;
+Outlook.<SPAN style="COLOR: rgb(43,145,175)">MAPIFolder</SPAN> ContactFolder =
+   (Outlook.<SPAN style="COLOR: rgb(43,145,175)">MAPIFolder</SPAN>)thisMail.Application.Session.GetDefaultFolder(Microsoft.Office.Interop.Outlook.<SPAN style="COLOR: rgb(43,145,175)">OlDefaultFolders</SPAN>.olFolderContacts);
+<SPAN style="COLOR: rgb(0,0,255)">foreach</SPAN> (Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN> contact <SPAN style="COLOR: rgb(0,0,255)">in</SPAN> ContactFolder.Items)
+   {
+   
+      Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN> contact = (Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN>)obj;
+
+      <SPAN style="COLOR: rgb(0,0,255)">if</SPAN> ((contact.Email1Address == thisMail.SenderEmailAddress ||
+         contact.Email2Address == thisMail.SenderEmailAddress ||
+         contact.Email3Address == thisMail.SenderEmailAddress) &amp;&amp;
+         !(contact.CompanyName.Trim() == <SPAN style="COLOR: rgb(163,21,21)">""</SPAN>))
+      {
+         <SPAN style="COLOR: rgb(0,128,0)">// Instantiate the service and get the details of the company's sales
+</SPAN>         SalesDetails.svcSalesDetails.<SPAN style="COLOR: rgb(43,145,175)">SalesDetailsServiceClient</SPAN> svc =
+            <SPAN style="COLOR: rgb(0,0,255)">new</SPAN> SalesDetails.svcSalesDetails.<SPAN style="COLOR: rgb(43,145,175)">SalesDetailsServiceClient</SPAN>();
+
+         _salesDetails = svc.GetSalesDetails(contact.CompanyName);
+         found = <SPAN style="COLOR: rgb(0,0,255)">true</SPAN>;
+         <SPAN style="COLOR: rgb(0,0,255)">break</SPAN>;
+      }
+   }</PRE>
+<P>This threw an InvalidCastException in the foreach line complaining that the object (of type System.__comobject) couldn't be cast to a ContactItem.</P>
+<P>So next I looped through the items in the folder as a collection of objects and did the cast within the loop.&nbsp;</P><PRE class=code><SPAN style="COLOR: rgb(0,0,255)">foreach</SPAN> (System.<SPAN style="COLOR: rgb(43,145,175)">Object</SPAN> obj <SPAN style="COLOR: rgb(0,0,255)">in</SPAN> ContactFolder.Items)<BR>   { <BR>      Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN> contact = (Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN>)obj;</PRE><PRE class=code></PRE>
+<P>Same issue (at the cast line again). I'm not sure why I thought this would work any better.</P>
+<P>I got a little sidetracked by the first paragraph of <A href="http://www.slipstick.com/" mce_href="http://www.slipstick.com/">Sue Mosher</A>'s response to <A href="http://www.outlookcode.com/threads.aspx?forumid=5&amp;messageid=24402" mce_href="http://www.outlookcode.com/threads.aspx?forumid=5&amp;messageid=24402">this question</A> on <A href="http://www.outlookcode.com/default.aspx" mce_href="http://www.outlookcode.com/default.aspx">OutlookCode.com</A> and added</P><PRE class=code><SPAN style="COLOR: rgb(43,145,175)">Marshal</SPAN>.ReleaseComObject(contact);</PRE>
+<P><A href="http://11011.net/software/vspaste" mce_href="http://11011.net/software/vspaste"></A>at the bottom of the loop (especially as by this stage I'd discovered that it wasn't the first object in the collection that was throwing the exception - it was about the 270th - near enough to Sue's 250).</P>
+<P>Actually, I was running into the issue addressed in her second paragraph, but I didn't read that. It took me a call to <A href="http://community.softteq.com/blogs/nick/default.aspx" mce_href="http://community.softteq.com/blogs/nick/default.aspx">Nick Randolph</A> (just before we went off to <A href="http://community.softteq.com/blogs/nick/archive/2007/10/30/another-microsoft-move-and-shake.aspx" mce_href="http://community.softteq.com/blogs/nick/archive/2007/10/30/another-microsoft-move-and-shake.aspx">play hockey</A>) to realise that a contact folder can contain things other than Contacts. Thanks Nick.</P>
+<P>An easy way to filter the collection is to use the Restrict() method:</P><PRE class=code>Outlook.<SPAN style="COLOR: rgb(43,145,175)">Items</SPAN> colItems = ContactFolder.Items.Restrict(<SPAN style="COLOR: rgb(163,21,21)">"[MessageClass]='IPM.Contact'"</SPAN>);</PRE>
+<P>Finally things were working, but they were still SLOW. Turns out it's lots quicker to let the built-in search function do the heavy lifting; in particular the Find() method. The final incarnation of my find code now looks like this:</P><PRE class=code>Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN> contact;
+<SPAN style="COLOR: rgb(0,0,255)">if</SPAN> (e.OutlookItem <SPAN style="COLOR: rgb(0,0,255)">is</SPAN> Outlook.<SPAN style="COLOR: rgb(43,145,175)">MailItem</SPAN>)
+{
+   <SPAN style="COLOR: rgb(0,128,0)">// look up the contact from the sender of the mail
+</SPAN>   Outlook.<SPAN style="COLOR: rgb(43,145,175)">MailItem</SPAN> thisMail = (Outlook.<SPAN style="COLOR: rgb(43,145,175)">MailItem</SPAN>)e.OutlookItem;
+   Outlook.<SPAN style="COLOR: rgb(43,145,175)">MAPIFolder</SPAN> ContactFolder =
+      (Outlook.<SPAN style="COLOR: rgb(43,145,175)">MAPIFolder</SPAN>)thisMail.Application.Session.GetDefaultFolder(Microsoft.Office.Interop.Outlook.<SPAN style="COLOR: rgb(43,145,175)">OlDefaultFolders</SPAN>.olFolderContacts);
+
+   Outlook.<SPAN style="COLOR: rgb(43,145,175)">Items</SPAN> colItems = ContactFolder.Items.Restrict(<SPAN style="COLOR: rgb(163,21,21)">"[MessageClass]='IPM.Contact'"</SPAN>);
+   <SPAN style="COLOR: rgb(0,0,255)">string</SPAN> FilterString = <SPAN style="COLOR: rgb(163,21,21)">"[Email1Address] = '"</SPAN> + thisMail.SenderEmailAddress + <SPAN style="COLOR: rgb(163,21,21)">"' OR "</SPAN> +
+      <SPAN style="COLOR: rgb(163,21,21)">"[Email2Address] = '"</SPAN> + thisMail.SenderEmailAddress + <SPAN style="COLOR: rgb(163,21,21)">"' OR "</SPAN> +
+      <SPAN style="COLOR: rgb(163,21,21)">"[Email3Address] = '"</SPAN> + thisMail.SenderEmailAddress + <SPAN style="COLOR: rgb(163,21,21)">"'"</SPAN>;
+   contact = (Outlook.<SPAN style="COLOR: rgb(43,145,175)">ContactItem</SPAN>)colItems.Find(FilterString);
+}
+<SPAN style="COLOR: rgb(0,0,255)">else
+</SPAN>{ ...</PRE>
+<P>The moral of the story is two-fold:</P>
+<OL>
+<LI>Check your types before attempting to cast; and</LI>
+<LI>The built-in methods for searching or filtering are almost always better than those you try to roll yourself (it's all about the <A href="http://blogs.msdn.com/acoat/archive/2007/09/25/standing-on-the-shoulders-of-giants.aspx" mce_href="http://blogs.msdn.com/acoat/archive/2007/09/25/standing-on-the-shoulders-of-giants.aspx">platform</A>, man!)</LI></OL></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

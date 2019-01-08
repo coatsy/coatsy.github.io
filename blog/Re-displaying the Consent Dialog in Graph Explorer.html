@@ -1,0 +1,99 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Re-displaying the Consent Dialog in Graph Explorer</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    5/29/2016 4:17:47 AM</time>
+<hr>
+<div id='content'><p>I was trying to follow along with <a href="https://blogs.msdn.microsoft.com/richard_dizeregas_blog/" target="_blank">Richard diZerega</a>’s excellent tutorial on using the Excel REST Api in the Microsoft Graph (<a href="https://channel9.msdn.com/Shows/Office-Dev-Show/Office-Dev-Show-Episode-28-Microsoft-Graph-and-Excel-APIs" target="_blank">Episode 28</a> of the <a href="https://channel9.msdn.com/Shows/Office-Dev-Show" target="_blank">Office Dev Show</a>). As he demonstrated, I was using the Graph Explorer and was able to find my workbook by GETting</p><pre>https://graph.microsoft.com/beta/me/drive/root/children?$select=name,id</pre>
+<p>And then get a reference to the workbook I wanted to use by GETting</p><pre>https://graph.microsoft.com/beta/me/drive/items/[the id I found]/workbook</pre>
+<p>I could even find out what was in cells A1:C1 on Sheet1 of the workbook by GETting</p><pre>https://graph.microsoft.com/beta/me/drive/items/[the id I found]/workbook/worksheets('Sheet1')/range(address='Sheet1!A1:C1')</pre>
+<p>BUT, when I tried to set the values in that range by PATCHing</p><pre>https://graph.microsoft.com/beta/me/drive/items/[the id I found]/workbook/worksheets('Sheet1')/range(address='Sheet1!A1:C1')</pre>
+<p>and passing</p><pre>{ "values" : [["First Name","Last Name","Company"]] }</pre>
+<p>in the body, I got the following cryptic error:</p><pre>{
+    "error": {
+        "code": "EditModeAccessDenied",
+        "message": "",
+        "innerError": {
+            "request-id": "6610f3fe-93d5-42b1-8687-0f53dce1e25c",
+            "date": "2016-05-24T05:36:04"
+        }
+    }
+}</pre>
+<p>Which is pretty wierd, because I can quite happily edit the workbook in Excel online and even via other apps using the Graph.</p>
+<p>It turns out that the problem was that I'd consented to the Graph Explorer application back in the days when it was a GET only interface, so I needed to pop up the common consent dialog again with the new permissions it needed for doing POST and PATCH (and DELETE)</p>
+<p>Unfortunately, there didn't seem to be an easy way to do this (at least I couldn't find one). Then my mate Chad Brooks suggested that I needed to add the</p><pre>promt=consent</pre>
+<p>parameter to the auth dialog page.</p>
+<p>I re-launched the Graph Explorer and clicked the Sign In link. At the next page (the login page), I manually edited the URL to add the parameter and re-loaded. I logged in as normal and lo! I was presented with the common consent dialog. Now when I PATCH that range I get a much more sensible answer:</p><pre>{
+    "@odata.context": "https://graph.microsoft.com/beta/$metadata#worksheet",
+    "@odata.type": "#microsoft.graph.range",
+    "@odata.id": "/users('516bd36d-a7e4-48b5-b6f7-f909133a9b8e')/drive/items('01BDIUI7YEHLXXPQG52ZBLRSWBSQX3DWEW')/workbook/worksheets(%27%7B00000000-0001-0000-0000-000000000000%7D%27)/range(address=%27Sheet1!A1:C1%27)",
+    "address": "Sheet1!A1:C1",
+    "addressLocal": "Sheet1!A1:C1",
+    "cellCount": 3,
+    "columnCount": 3,
+    "columnHidden": false,
+    "columnIndex": 0,
+    "formulas": [
+        [
+            "First Name",
+            "Last Name",
+            "Company"
+        ]
+    ],
+    "formulasLocal": [
+        [
+            "First Name",
+            "Last Name",
+            "Company"
+        ]
+    ],
+    "formulasR1C1": [
+        [
+            "First Name",
+            "Last Name",
+            "Company"
+        ]
+    ],
+    "hidden": false,
+    "numberFormat": [
+        [
+            "General",
+            "General",
+            "General"
+        ]
+    ],
+    "rowCount": 1,
+    "rowHidden": false,
+    "rowIndex": 0,
+    "text": [
+        [
+            "First Name",
+            "Last Name",
+            "Company"
+        ]
+    ],
+    "values": [
+        [
+            "First Name",
+            "Last Name",
+            "Company"
+        ]
+    ],
+    "valueTypes": [
+        [
+            "String",
+            "String",
+            "String"
+        ]
+    ]
+}</pre>
+<p>All's right with the world once more.</p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

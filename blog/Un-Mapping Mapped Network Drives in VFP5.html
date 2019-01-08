@@ -1,0 +1,223 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Un-Mapping Mapped Network Drives in VFP5</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    2/25/2009 8:07:00 PM</time>
+<hr>
+<div id='content'><p>Back in the day, I wrote a bunch of articles for what was, then, pretty much the leading Visual FoxPro magazine. I used to have these published elsewhere on the web, but that site's pretty much dormant now and so I thought I'd pop them up here as well. </p>  <p>This one was first published in FoxTalk December 1998, so the content is not necessarily relevant to today's versions of OSs and App Dev environments. Remember, This was the days of VFP 5.0, Windows NT 4 and Win 95/98</p>  <p><font color="#ff0000">Update</font> – Thanks to <a href="http://mashupx.com/blog/">Ken Levy</a> for pointing out to me that you can do this exact thing with the My.Computer.FileSystem namespace in <a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=C04BCF8C-0944-49F0-AC2B-563518CE1D70&amp;displaylang=en">Sedna</a> – as per below:</p>  <pre class="code">my = NEWOBJECT(&quot;my&quot;, &quot;my.vcx&quot;)
+loDrive = My.Computer.FileSystem.GetDriveInfo('J:')
+? loDrive.ShareName &amp;&amp; returns the UNC path</pre>
+
+<hr /><cite>One commonly stored piece of information is the location of a file or folder. If that file or folder is on the network, however, different users may refer to the location through different drive mappings. In this article Andrew shows us how to decode the mapped location using the Windows API so that any user can view or retrieve the file or folder.</cite> 
+
+<p>I learnt something this week that I guess I should have known. The Win32API is not consistent across operating systems. There are functions that work fine under Windows NT, but that fail miserably when called under Win95. I found one when working on the subject matter for this article.</p>
+
+<p>Mapping network drives is a common way of simplifying network storage systems from a user's point of view. Unfortunately for the cause of universal access, however, different users map network shares to different driver letters. If your application allows users to store links to files, how can you tell whether E:\COMMON DOCUMENTS\BUDGET98.XLS and W:\BUDGET98.XLS refer to the same document? Even more importantly, how can a third user who has neither E: or W: mapped retrieve the document?</p>
+
+<p>The answer is UNC. The Universal Naming Convention uses the format \\SERVER\SHARENAME\ to refer to the location of a file or folder. In the example above, the first user may have mapped drive E to \\SERVER_PDC\PUB, and the second may have mapped drive W to \\SERVER_PDC\COMMONDOC.</p>
+
+<p>Any Visual FoxPro function that accepts a path as a parameter will handle UNC paths. However, returning a UNC path from the getfile() and getdir() functions is a completely different matter. These functions are central to allowing your users to specify the location of files and folders. The getfile() function will return a UNC path, but only if the user navigates to the file through the network neighborhood – something a user used to having a network drive mapped is unlikely to do. The getdir() function is even worse. There is no way of getting it to return a UNC path to a folder (except in one specific instance – see the <a href="http://blogs.msdn.com/controlpanel/blogs/posteditor.aspx?SelectedNavItem=Posts&amp;sectionid=3901&amp;postid=9445024#Sidebar" mce_href="http://blogs.msdn.com/controlpanel/blogs/posteditor.aspx?SelectedNavItem=Posts&amp;sectionid=3901&amp;postid=9445024#Sidebar">sidebar</a> for details). Not only do the functions not return UNC paths, VFP does not provide any way to convert a mapped path to a UNC path.</p>
+
+<h2>Win32API to the rescue!</h2>
+
+<p>The windows 32 bit API provides a function that accepts a mapped path and returns the UNC path that corresponds to that mapped path. I searched through the API documentation and found a function called WnetGetUniversalName() in mpr.dll in the system directory. The function will accept the path to either a file, or to a folder with or without a trailing backslash.</p>
+
+<p>Unfortunately, this function is only available under Windows NT. I found this out the hard way, having developed and tested a routine using WnetGetUniversalName on my WinNT development box, I proudly installed it on a client's Win95 machine, only to have it not work;. Microsoft have a Knowledge Base article confirming that it doesn't work under Win95 (there's no mention in the article of Win98). So much for a single, consistent Win32API!</p>
+
+<p>What the article does mention though, is a couple of work-arounds. The first involves about 30 lines of C code that calls another couple of functions in mpr.dll. The second mentions in passing that there's yet another function in mpr.dll called WnetGetConnection(). WnetGetConnection() is not quite as versatile as WnetGetUniversalName(). It only accepts a drive letter and a colon (e.g. H:), rather than a full path. With a little string manipulation, however, it's pretty easy to split up a mapped path, pass the function what it wants and then re-assemble a complete UNC path from the pieces.</p>
+
+<p>To take the drudgery out of calling the Windows API, I wrote a wrapper function called GetUNCPath() that I include in any project in which I call either getdir() or getfile(). You could, of course, write wrappers for getfile() and getdir() which called GetUNCPath().</p>
+
+<p>For example, if the pub share on the server_pdc server were mapped as drive s:</p>
+
+<pre class="code">? GetUNCPath('s:\documents') 
+\\server_pdc\pub\documents 
+? GetUNCPath('c:\temp') 
+c:\temp 
+? GetUNCPath('s:\documents\myfile.doc') 
+\\server_pdc\pub\documents\myfile.doc </pre>
+
+<p>The wrapper function itself is pretty straightforward. The complete function is shown in listing 1 and is available in the download file (2k). It accepts the mapped drive path as a compulsory parameter and optionally a length for the UNC version of the path. This second parameter is most often passed by the function itself in a recursive call if the default buffer size guess is not large enough (more on this later).</p>
+
+<p>Constants from the corresponding API header files are reproduced in the function rather than in a stand-alone header to make it more portable and a couple of local constants are also #DEFINEd for clarity later in the code.</p>
+
+<p>The mapped drive parameter is checked and if it is not a character expression, or if it's .NULL., then the function simply returns whatever was passed to it. If the tests are passed, then the API function is DECLAREd. Note the use of the WIN32API rather than the specific mpr.dll.</p>
+
+<p>Splitting up the mapped path parameter into its component pieces is simply a matter of taking the first two characters and calling them the mapped drive, and taking the rest of the expression and calling them the path. There's no problem if that's not a valid assumption because the API function will return an error value and we'll take the appropriate action.</p>
+
+<p>Next I call the API function and check the return value. The two important values I'm looking for are NO_ERROR (my personal favorite &lt;g&gt;) and ERROR_MORE_DATA. The NO_ERROR code means just that: the drive mapping was decoded successfully, and the result is in the lcBuffer variable.</p>
+
+<p>The value placed in lcBuffer is a null-terminated string. This means that the string is terminated by a chr(0) that needs to be stripped before we use it in VFP. I just append the path part of the original mapped path parameter to the translated drive returned by the PAI call and <i>viola</i>, a UNC version of the mapped path.</p>
+
+<p>The ERROR_MORE_DATA return value tells me that I didn't allocate enough space in the return buffer and I need to call the function again. Fortunately, once I get this error, I no longer need to guess how long to make the buffer. In addition to returning the error, the API function sets lnBufferSize to the value required so I can call GetUNCPath() recursively with the original mapped drive path and lnBufferSize.</p>
+
+<p>Each of the other error states indicates that the mapping could not be decoded for some reason or other. I've decided to treat them all the same way: simply return the mapped path passed to the function.</p>
+
+<p>While Visual FoxPro is a wonderful development environment it does have some limitations. Fortunately it provides enough access to the Windows API to be able to work around most of them.</p>
+
+<pre class="code">* Program....: GetUNCPath.prg
+* Version....: 1.0
+* Author.....: Andrew Coates
+* Date.......: September 28, 1998
+* Notice.....: Copyright © 1998 Civil Solutions, All 
+* Rights Reserved.
+* Compiler...: Visual FoxPro 05.00.00.0415 for Windows
+* Abstract...: Wrapper to the API call that converts a
+* mapped drive path to the UNC path
+* Changes....:
+* Originally used WNetGetUniversalName, but that 
+* doesn't work under Win95 (see KB Q131416). Now uses
+* WNetGetConnection which uses a string rather than a
+* structure so STRUCTURE_HEADER is now 0        
+
+lParameters tcMappedPath, tnBufferSize        
+
+* from winnetwk.h
+#define UNIVERSAL_NAME_INFO_LEVEL 0x00000001
+#define REMOTE_NAME_INFO_LEVEL 0x00000002
+        
+* from winerror.h
+#define NO_ERROR 0
+#define ERROR_BAD_DEVICE 1200
+#define ERROR_CONNECTION_UNAVAIL 1201
+#define ERROR_EXTENDED_ERROR 1208
+#define ERROR_MORE_DATA 234
+#define ERROR_NOT_SUPPORTED 50
+#define ERROR_NO_NET_OR_BAD_PATH 1203
+#define ERROR_NO_NETWORK 1222
+#define ERROR_NOT_CONNECTED 2250
+        
+* local decision - paths are not likely to be longer
+* than this - if they are, this function calls itself
+* recursively with the appropriate buffer size as the 
+* second parameter
+#DEFINE MAX_BUFFER_SIZE 500
+        
+* string length at the beginning of the structure 
+* returned before the UNC path
+* ACC changed to 0 on 9/10/98 - Now using 
+* WnetGetConnection which uses a string rather than a 
+* struct
+#DEFINE STRUCTURE_HEADER 0
+        
+local lcReturnValue
+        
+if type('tcMappedPath') = &quot;C&quot; and ! isnull(tcMappedPath)
+	* split up the passed path to get just the drive
+	local lcDrive, lcPath
+	* just take the first two characters - we'll put it 
+	* all back together later. If the first two 
+	* characters are not a valid drive, that's OK. The 
+	* error value returned from the function call will 
+	* handle it.
+        
+	* case statement ensures we don't get the &quot;cannot 
+	* access beyond end of string&quot; error
+	do case
+	case len(tcMappedPath) &gt; 2
+		lcDrive = left(tcMappedPath, 2)
+		lcPath = substr(tcMappedPath, 3)
+	case len(tcMappedPath) &lt;= 2
+		lcDrive = tcMappedPath
+		lcPath = &quot;&quot;
+	endcase
+        
+	declare INTEGER WNetGetConnection IN WIN32API ;
+		STRING @lpLocalPath, ;
+		STRING @lpBuffer, ;
+		INTEGER @lpBufferSize
+        
+	* set up some variables so the appropriate call can 
+	* be made
+	local lcLocalPath, lcBuffer, lnBufferSize, ;
+	lnResult, lcStructureString
+        
+	* set to +1 to allow for the null terminator
+	lnBufferSize = iif(pcount() = 1 or type('tnBufferSize') # &quot;N&quot; or isnull(tnBufferSize), ;
+		MAX_BUFFER_SIZE, ;
+	tnBufferSize) + 1
+        
+	lcLocalPath = lcDrive
+	lcBuffer = space(lnBufferSize)
+        
+	* now call the dll function
+	lnResult = WNetGetConnection(@lcLocalPath, @lcBuffer, @lnBufferSize)
+        
+	do case
+	* string translated sucessfully
+	case lnResult = NO_ERROR 
+		* Actually, this structure-stripping is no longer
+		* required because WnetGetConnection() returns a
+		* string rather than a struct
+		lcStructureString = alltrim(substr(lcBuffer, STRUCTURE_HEADER + 1))
+		lcReturnValue = left(lcStructureString, ;
+			at(chr(0), lcStructureString) - 1) + lcPath
+        
+	* The string pointed to by lpLocalPath is invalid.
+	case lnResult = ERROR_BAD_DEVICE 
+		lcReturnValue = tcMappedPath
+        
+	* There is no current connection to the remote 
+	* device, but there is a remembered (persistent) 
+	* connection to it.
+	case lnResult = ERROR_CONNECTION_UNAVAIL 
+		lcReturnValue = tcMappedPath
+        
+	* A network-specific error occurred. Use the 
+	* WNetGetLastError function to obtain a description 
+	* of the error.
+	case lnResult = ERROR_EXTENDED_ERROR 
+		lcReturnValue = tcMappedPath
+        
+	* The buffer pointed to by lpBuffer is too small. 
+	* The function sets the variable pointed to by 
+	* lpBufferSize to the required buffer size.
+	case lnResult = ERROR_MORE_DATA 
+		lcReturnValue = getuncpath(tcMappedPath, lnBufferSize)
+        
+	* None of the providers recognized this local name 
+	* as having a connection. However, the network is 
+	* not available for at least one provider to whom 
+	* the connection may belong.
+	case lnResult = ERROR_NO_NET_OR_BAD_PATH 
+		lcReturnValue = tcMappedPath
+        
+	* There is no network present.
+	case lnResult = ERROR_NO_NETWORK 
+		lcReturnValue = tcMappedPath
+        
+	* The device specified by lpLocalPath is not 
+	* redirected.
+	case lnResult = ERROR_NOT_CONNECTED 
+		lcReturnValue = tcMappedPath
+        
+	otherwise
+		lcReturnValue = tcMappedPath
+        
+	endcase
+        
+else        
+
+	lcReturnValue = tcMappedPath
+        
+endif
+        
+return lcReturnValue</pre>
+
+<h3><a title="Sidebar" name="Sidebar"></a>Sidebar - Returning a UNC Path from getdir()</h3>
+
+<p>If you pass getdir() an initial folder in UNC format, then that folder will be the initially selected folder but it will not appear in the list of drives in the dialog (see <b>Figure 1</b>). If that folder or one of its sub folders is selected then the string returned will be in UNC. Be careful though. If you navigate to a mapped or local drive from the drives drop-down box, there's no way to get back to the UNC drive.</p>
+
+<p><img alt="getdir() screen shot (5kb)" src="http://web.archive.org/web/20070829034425/http://www.civilsolutions.com.au/publications/images/getuncpath1.gif" width="246" height="338" mce_src="http://web.archive.org/web/20070829034425/http://www.civilsolutions.com.au/publications/images/getuncpath1.gif" /></p>
+
+<p>Figure 1. &quot;Passing getdir() a UNC path will initially display the UNC path in the dialog, but the un-mapped drive will not appear in the drop-down list.&quot;</p><div class="wlWriterHeaderFooter" style="text-align:right; margin:0px; padding:4px 0px 4px 0px;"><script type="text/javascript">digg_url = "http://blogs.msdn.com/acoat/archive/2009/02/26/un-mapping-mapped-network-drives-in-vfp5.aspx";digg_title = "Un-Mapping Mapped Network Drives in VFP5";digg_bgcolor = "#FFFFFF";digg_skin = "compact";</script><script src="http://digg.com/tools/diggthis.js" type="text/javascript"></script><script type="text/javascript">digg_url = undefined;digg_title = undefined;digg_bgcolor = undefined;digg_skin = undefined;</script></div>
+<p><a href="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/09/44/50/24/9812coasc2.zip" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/communityserver-components-postattachments/00-09-44-50-24/9812coasc2.zip">9812coasc2.zip</a></p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

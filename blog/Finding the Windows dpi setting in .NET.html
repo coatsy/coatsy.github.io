@@ -1,0 +1,42 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Finding the Windows dpi setting in .NET</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    11/16/2008 8:17:43 PM</time>
+<hr>
+<div id='content'><p>I had a note from Stephen Lead (of <a href="http://www.ignitespatial.com/">Ignite Spatial</a> fame) asking how to determine the dpi setting a user has selected in Windows. He pointed me to the only <a href="http://support.microsoft.com/kb/137556/en-us">MSDN article</a> he could find on the subject, ironically explaining how to do it in Visual FoxPro. I didn’t know off the top of my head, generally you don’t have to worry about this in .NET because the framework is DPI aware and automatically scales your controls (you can control this with the <a href="http://msdn.microsoft.com/en-us/library/system.windows.forms.containercontrol.autoscalemode.aspx">ContainerControl.AutoScaleMode</a> property). Stephen was setting the form’s height and width explicitly in code and wanted to be able to figure out what those values would be.</p>  <p>After some searching, <a href="http://www.tech-archive.net/Archive/DotNet/microsoft.public.dotnet.languages.csharp/2007-07/msg02257.html">I found out how to do this</a>. All objects that inherit from <a href="http://msdn.microsoft.com/en-us/library/system.windows.forms.control.aspx">System.Windows.Forms.Control</a> inherit the <a href="http://msdn.microsoft.com/en-us/library/system.windows.forms.control.creategraphics.aspx">CreateGraphics</a> method which returns a <a href="http://msdn.microsoft.com/en-us/library/system.drawing.graphics.aspx">System.Drawing.Graphics</a> object for the control. The Graphics object has <a href="http://msdn.microsoft.com/en-us/library/system.drawing.graphics.dpix.aspx">DpiX</a> and <a href="http://msdn.microsoft.com/en-us/library/system.drawing.graphics.dpiy.aspx">DpiY</a> properties which give respectively the resolution of the screen in dots per inch horizontally and vertically.</p>  <p>This means, for example, that you can grab the resolution in the form load (VB):</p>  <pre class="code"><span style="color: blue">Private Sub </span>Form1_Load(<span style="color: blue">ByVal </span>sender <span style="color: blue">As </span>System.Object, <span style="color: blue">ByVal </span>e <span style="color: blue">As </span>System.EventArgs) <span style="color: blue">Handles MyBase</span>.Load
+   <span style="color: blue">Using </span>myGraphics <span style="color: blue">As </span>Graphics = <span style="color: blue">Me</span>.CreateGraphics()
+      MessageBox.Show(<span style="color: blue">String</span>.Format(<span style="color: #a31515">&quot;Resolution X: {0} dpi, Resolution Y: {1} dpi&quot;</span>, myGraphics.DpiX, myGraphics.DpiY), _
+                      <span style="color: #a31515">&quot;Windows Resolution&quot;</span>)
+   <span style="color: blue">End Using
+End Sub</span></pre>
+<a href="http://11011.net/software/vspaste"></a>
+
+<p>or in C#</p>
+
+<pre class="code"><span style="color: blue">private void </span>Form1_Load(<span style="color: blue">object </span>sender, <span style="color: #2b91af">EventArgs </span>e)
+{
+    <span style="color: blue">using </span>(<span style="color: #2b91af">Graphics </span>myGraphics = <span style="color: blue">this</span>.CreateGraphics())
+    {
+        <span style="color: #2b91af">MessageBox</span>.Show(<span style="color: #2b91af">String</span>.Format(<span style="color: #a31515">&quot;Resolution X: {0} dpi, Resolution Y: {1} dpi&quot;</span>, myGraphics.DpiX, myGraphics.DpiY),
+                        <span style="color: #a31515">&quot;Windows Resolution&quot;</span>);
+    }
+}</pre>
+<a href="http://11011.net/software/vspaste"></a>
+
+<p>Either way, on my system this results in</p>
+
+<p><a href="media/TNBlogsFS/BlogFileStorage/blogs_msdn/acoat/WindowsLiveWriter/FindingtheWindowsdpisettingin.NET_904B/image_2.png" original-url="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/FindingtheWindowsdpisettingin.NET_904B/image_2.png"><img style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" title="image" border="0" alt="image" src="media/TNBlogsFS/BlogFileStorage/blogs_msdn/acoat/WindowsLiveWriter/FindingtheWindowsdpisettingin.NET_904B/image_thumb.png" original-url="http://blogs.msdn.com/blogfiles/acoat/WindowsLiveWriter/FindingtheWindowsdpisettingin.NET_904B/image_thumb.png" width="284" height="156" /></a></p>
+
+<p>Note that this works in the .NET Compact Framework as well.</p>
+
+<p><font color="#ff0000" size="1">Updated to include disposal of Graphics Object</font></p><div class="wlWriterHeaderFooter" style="text-align:right; margin:0px; padding:4px 0px 4px 0px;"><script type="text/javascript">digg_url = "http://blogs.msdn.com/acoat/archive/2008/11/17/finding-the-windows-dpi-setting-in-net.aspx";digg_title = "Finding the Windows dpi setting in .NET";digg_bgcolor = "#FFFFFF";digg_skin = "compact";</script><script src="http://digg.com/tools/diggthis.js" type="text/javascript"></script><script type="text/javascript">digg_url = undefined;digg_title = undefined;digg_bgcolor = undefined;digg_skin = undefined;</script></div></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

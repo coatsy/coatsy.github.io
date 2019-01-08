@@ -1,0 +1,89 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Gotchas writing Tabs for Teams</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    3/21/2017 11:51:08 PM</time>
+<hr>
+<div id='content'><p>I had great fun last night presenting at the <a href="https://www.meetup.com/Sydney-Sharepoint-User-Group/">Sydney SharePoint User Group</a> on an “Introduction to Customising Microsoft Teams with Tabs and Bots” (thanks <a href="https://twitter.com/johnnliu">John</a> and <a href="https://twitter.com/IvanWilson">Ivan</a> for inviting me). I shamelessly stole the slides and code from <a href="https://twitter.com/mikeamm">Mike Ammerlaan</a>’s excellent VS2017 Launch video <a href="https://channel9.msdn.com/Events/Visual-Studio/Visual-Studio-2017-Launch/WEB-104">Create awesome bots, connectors and tabs in Microsoft Teams</a>.</p> <p>In my session I demo’d creating a Tab for teams, based on the <a href="https://github.com/OfficeDev/TrainingContent/blob/master/Teams/01%20Tabs/Lab.md">lab</a> in the <a href="https://github.com/OfficeDev/TrainingContent/tree/master/Teams">teams folder</a> in the <a href="https://github.com/OfficeDev/TrainingContent">OfficeDev Training Content github repo</a>. The lab’s based on the preview version, and since then Teams has gone to General Availability, so there are a few differences, most notably the mechanism for side-loading your tab (or bot) to test. There’s a <a href="https://msdn.microsoft.com/en-us/microsoft-teams/sideload">good doc on the new process</a> available on MSDN.</p> <p>By the way, the <a href="https://msdn.microsoft.com/en-us/microsoft-teams/index">documentation for Teams development</a> is excellent – well worth a look from start to finish.</p> <p>However, in addition to the new way of doing things, I cam across a couple of other non-intuitive hurdles that I think might cause others (including me, later) to stumble.</p> <p>There are two places I came across errors that proved difficult to debug:</p> <h2>Error uploading the manifest for the tab to teams</h2> <p><strong>This means there’s something wrong in the manifest file (or associated icons)</strong>.</p> <p>The manifest is a json file (<a href="https://msdn.microsoft.com/en-us/microsoft-teams/schema">schema reference here</a>). The instructions currently on GitHub require you to use version 0.2 of the schema, but the documentation is all for v0.4. This led to some issues with things like the length of the <code>name</code> property. <strong>v0.2 requires that the <code>name</code> property be no more than 16 characters</strong>, but I couldn’t find that documented anywhere. Fortunately, I was editing the manifest in VS Code, and it does json file schema validation. It alerted me to the place the error was happening with a green squiggly, so that made things easier to track down.</p> <p><a href="media/2017/03/image509.png"><img title="image" style="border-left-width: 0px;border-right-width: 0px;border-bottom-width: 0px;padding-top: 0px;padding-left: 0px;padding-right: 0px;border-top-width: 0px" border="0" alt="image" src="media/2017/03/image_thumb485.png" width="341" height="87"></a></p> <p>To upload the manifest, you zip it up with a couple of icon files (44x44 and 88x88 pixels) and here’s where I ran into another gotcha. If you include the icon files (you can reference external URLs instead), <strong>they must each be less than 1.5kb in size</strong>. Turns out this is not so simple for an 88x88pixel image. I use <a href="https://www.syncfusion.com">Syncfusion</a>’s rather excellent (and free) <a href="https://www.syncfusion.com/downloads/metrostudio">Metro Studio</a> to create my icons, but I really had to tweak some parameters to get the size down.</p> <p>Any URLs in the manifest appear to be validated, not just checked that they’re a valid format, but actually hit to check that they exist. There were some placeholder URLs in the manifest when I originally uploaded it and I got a generic error. <strong>URLs in the manifest must be available when the the manifest is uploaded</strong>.</p> <p>Here’s the <code>manifest.json</code> file that ended up working for me.</p> <div id="scid:C89E2BDB-ADD3-4f7a-9810-1B7EACF446C1:14bf57d6-a7c1-4f93-a25e-b96445975860" class="wlWriterEditableSmartContent" style="float: none;padding-bottom: 0px;padding-top: 0px;padding-left: 0px;margin: 0px;padding-right: 0px"><pre>
+[sourcecode language='text'  padlinenumbers='true' toolbar='false']
+{
+	"$schema": "https://statics.teams.microsoft.com/sdk/v0.2/manifest/MicrosoftTeams.schema.json",
+	"manifestVersion": "0.2",
+	"id": "net.coatsy.instrument-sharing",
+	"version": "1.0",
+	"name": "Instrument Share",
+	"developer": {
+		"name": "Coatsy",
+		"websiteUrl": "https://instrument-sharing.azurewebsites.net/",
+		"privacyUrl": "https://instrument-sharing.azurewebsites.net/privacy.html",
+		"termsOfUseUrl": "https://instrument-sharing.azurewebsites.net/termsofuse.html"
+	},
+	"description": {
+		"short": "Host instrument inventory and relevant items as a tab.",
+		"full": "Work with instrument &amp; accessory inventory items as a tab."
+	},
+	"icons": {
+		"44": "inv44.png",
+		"88": "inv88.png"
+	},
+	"accentColor": "#223344",
+	"configUrl": "https://instrument-sharing.azurewebsites.net/configuration.html",
+	"canUpdateConfig": true,
+	"needsIdentity": false,
+	"validDomains": [
+		"static2.sharepointonline.com",
+		"secure.aadcdn.microsoftonline-p.com",
+		"code.jquery.com",
+		"statics.teams.microsoft.com",
+		"*.microsoftonline.com"
+	]
+}
+[/sourcecode]
+</pre>
+</div>
+<p>&nbsp;</p>
+<h2>Error adding the tab to a channel</h2>
+<p><strong>This means there’s something wrong on the configuration page.</strong></p>
+<p>Once the manifest’s been uploaded and validated, you need to add the new tab to a channel. Doing so displays the page specified in the manifest’s <code>configUrl</code> property. The configuration page allows you to collect any additional setting information and then save all of the configuration information for the tab with a javascript call back into the <code>MicrosoftTeams.js</code> library (<a href="https://msdn.microsoft.com/en-us/microsoft-teams/jslibrary">API reference for this library</a> is available on MSDN). 
+<p>Once again, URLs in the configuration settings appear to be validated – they must be https and either be in the same domain as the settings page or from a domain whitelisted in the manifest’s <code>validDomains</code> list. 
+<p>Here’s the <code>configuration.html</code> that ended up working for me.</p>
+<div id="scid:C89E2BDB-ADD3-4f7a-9810-1B7EACF446C1:2e89a2d9-0208-406e-921e-cb02b13f1a42" class="wlWriterEditableSmartContent" style="float: none;padding-bottom: 0px;padding-top: 0px;padding-left: 0px;margin: 0px;padding-right: 0px"><pre>
+[sourcecode language='html' ]
+
+
+
+    
+    <title></title>
+
+
+    <script src="https://statics.teams.microsoft.com/sdk/v0.4/js/MicrosoftTeams.min.js"></script>
+    <script type="text/javascript">
+    microsoftTeams.initialize();
+    microsoftTeams.settings.registerOnSaveHandler(function(saveEvent){
+        microsoftTeams.settings.setSettings({
+            entityId: "InstrumentSharing",
+            contentUrl: "https://instrument-sharing.azurewebsites.net/index.html",
+            suggestedDisplayName: "Instrument Sharing",
+            websiteUrl: "https://instrument-sharing.azurewebsites.net"
+        });
+        saveEvent.notifySuccess();
+    });
+    microsoftTeams.settings.setValidityState(true);
+    </script>
+
+
+[/sourcecode]
+</pre>
+</div>
+<p>&nbsp;</p>
+<h2>More Troubleshooting Help</h2>
+<p>There are more <a href="https://msdn.microsoft.com/en-us/microsoft-teams/troubleshooting">troubleshooting tips in the MSDN documentation</a>.</p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

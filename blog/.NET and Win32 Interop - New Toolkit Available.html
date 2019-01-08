@@ -1,0 +1,21 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>.NET and Win32 Interop - New Toolkit Available</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    5/30/2007 9:12:00 PM</time>
+<hr>
+<div id='content'><P>While I was prepping for some VFP <A href="http://blogs.msdn.com/acoat/archive/2007/05/25/slide-decks-from-the-hong-kong-roadmap-and-futures-event.aspx" mce_href="http://blogs.msdn.com/acoat/archive/2007/05/25/slide-decks-from-the-hong-kong-roadmap-and-futures-event.aspx">sessions I delivered in Hong Kong</A>&nbsp;last week, I pinged <A href="http://blogs.msdn.com/yag" mce_href="http://blogs.msdn.com/yag">yag</A> for some pointers from his DevCon keynote. In addition to a bunch of great info on <A href="http://www.microsoft.com/downloads/details.aspx?familyid=cc84f749-a153-4929-8277-deb9a2f8b0a5&amp;displaylang=en" mce_href="http://www.microsoft.com/downloads/details.aspx?familyid=cc84f749-a153-4929-8277-deb9a2f8b0a5&amp;displaylang=en">Sedna and VFP 9.0 SP2</A>, he pointed me at a really cool resource - the <A href="http://msdn2.microsoft.com/en-us/vbasic/bb419144.aspx" mce_href="http://msdn2.microsoft.com/en-us/vbasic/bb419144.aspx">Microsoft Interop Forms Toolkit 2.0</A>. This toolkit basically installs new templates into VS2005 that bootstrap the development of .NET controls and forms that can be included into Win32 applications including <A href="http://msdn2.microsoft.com/en-au/vbrun/default.aspx" mce_href="http://msdn2.microsoft.com/en-au/vbrun/default.aspx">VB6</A> and <A href="http://msdn2.microsoft.com/en-au/vfoxpro/default.aspx" mce_href="http://msdn2.microsoft.com/en-au/vfoxpro/default.aspx">VFP</A>.</P>
+<P>I developed a couple of controls that I can just drop directly onto a VFP (or VB6) form to provide things that are easy to do in .NET, but are difficult in VFP. For example, the <A href="http://msdn2.microsoft.com/en-us/library/system.io.filesystemwatcher.aspx" mce_href="http://msdn2.microsoft.com/en-us/library/system.io.filesystemwatcher.aspx">FileSystemWatcher</A> control is great, it raises events when things change in the file system (file created, changed, deleted etc) so your app&nbsp;can react to those changes.</P>
+<P>You can also create composite .NET controls (made up of a number of individual controls) and expose them as a single interop control.</P>
+<P>The source for the demo I gave in Hong Kong is attached. Build the .NET project first, and then open the VFP project. You might be missing a couple of images in the composite control, but they're just for show.</P>
+<P>BTW, as per <A href="http://rickschummer.com/blog/2007/05/using-gold-in-vfp-solution-samples.html" mce_href="http://rickschummer.com/blog/2007/05/using-gold-in-vfp-solution-samples.html">Rick's great post</A>, there's a bunch of functionality also available in the FoxPro Foundation Classes including the System Tray class, and these don't require you to use .NET. As always, choose the most appropriate tool for the job.</P>
+<p><a href="media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/02/99/62/60/InteropToolkitSample.zip" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/communityserver-components-postattachments/00-02-99-62-60/InteropToolkitSample.zip">InteropToolkitSample.zip</a></p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

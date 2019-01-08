@@ -1,0 +1,32 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>How I learned to stop worrying and love the rebuild</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    11/27/2006 5:49:36 PM</time>
+<hr>
+<div id='content'>One of the questions I get from time to time is "don't you get tired of <a href="http://blogs.msdn.com/acoat/archive/2006/11/26/make-and-mend-day-installation-configuration-and-celebration.aspx">rebuilding</a> your machine <a href="http://blogs.msdn.com/acoat/archive/2005/11/01/487629.aspx">all the time</a>?". Well, the answer is no. There are a couple of reasons for this. Firstly, I love <a href="http://blogs.msdn.com/acoat/archive/2006/11/09/more-developer-evangelists-please.aspx">playing with the toys</a>. Secondly, and perhaps more importantly, a rebuild is not really a painful exercise for me.
+
+Some people do all of their work inside virtual machines, and only install a base OS, Office and either <a href="http://www.microsoft.com/technet/prodtechnol/virtualserver/default.mspx">Virtual Server</a> or <a href="http://www.microsoft.com/windows/virtualpc/default.mspx">Virtual PC</a> on the metal. Don't get me wrong, I love <a href="http://technet2.microsoft.com/windowsserver/en/workloads/virtconsol.mspx">virtualisation</a>, and I use it all the time for demos and experimentation (and now for development with VS2003), but it doesn't solve the problem of the environment getting clogged up with flotsam and jetsam from installs, uninstalls, betas and CTPs on my main machine.
+
+The approach I take is to have 2 partitions on my main machine. I have a 90 GB drive in my A7 and it's partitioned like this:
+
+<img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="107" alt="C:\ 53 GB, D:\ 40 GB" src="http://candrew.members.winisp.net/blogimages/HowIlearnedtostopworryingandlovetherebui_86F6/image05.png" width="619" border="0"> 
+
+This means that a rebuild only blows away the c:\ drive, and all of my data are preserved.
+
+In fact, that's not the only thing that makes it easy to&nbsp;decide to rebuild. The thing that makes it easiest is the servers.
+
+Firstly there's the <a href="http://www.windowsitpro.com/Article/ArticleID/47447/47447.html">Windows Deployment Services</a> (link from <a href="http://blogs.technet.com/mkleef/archive/2006/05/19/429179.aspx">Kleefy's blog</a>) server. This means that I can have a new base image on the box (with Vista and Office 2007) within 45 minutes. 
+
+Next there's <a href="http://technet2.microsoft.com/WindowsServer/en/library/2b24872a-05ca-41be-9887-33acc87a20561033.mspx?mfr=true">My Documents Redirection</a>. All of my My Documents folder (currently about 830 MB) actually lives on a server (possibly in Singapore, but then, hey, who cares). When I do a rebuild, there's an offline copy made on my machine automatically (on the C drive by default), and the <a href="http://technet2.microsoft.com/WindowsServer/f/?en/library/b1d05a10-f74b-413e-a6c4-c331b746e8791033.mspx">Offline Folders</a> technology keeps the two copies synchronised. I don't have to worry about backups - that's all done for me.
+
+<p>Finally, there's <a href="http://www.microsoft.com/exchange/default.mspx">Exchange Server</a>. When I first start <a href="http://office.microsoft.com/en-au/outlook/FX100487751033.aspx">Outlook</a>, all of my Exchange settings are automatically discovered (via <a href="http://technet2.microsoft.com/windowsserver/en/technologies/featured/ad/default.mspx">Active Directory</a>) and a local copy of my Exchange mailbox is made on my machine (again, on the "expendable" C drive). I still need to run a whole bunch of installs (as per <a href="http://blogs.msdn.com/acoat/archive/2005/11/01/487629.aspx">my list</a>), but they just run in the background while I'm working.</p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

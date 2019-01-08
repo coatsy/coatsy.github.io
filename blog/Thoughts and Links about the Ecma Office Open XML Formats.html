@@ -1,0 +1,104 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>Thoughts and Links about the Ecma Office Open XML Formats</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    11/23/2006 12:18:49 AM</time>
+<hr>
+<div id='content'>While on the Ready tour, I've had lots of interest about the session I'm doing on the <a href="http://office.microsoft.com/en-au/products/HA102058151033.aspx">Ecma Office Open XML Formats</a>. There have been some great questions from the audience, both during the session and afterwards via&nbsp;this blog.&nbsp;In response to those (and for my own interest), here are some answers and some links.
+
+<hr>
+
+Steve Kay <a href="http://blogs.msdn.com/acoat/archive/2006/11/09/read-and-write-office-2007-format-files-from-versions-of-office-back-to-office-2000.aspx#comments">asked</a>:
+
+<blockquote> I have installed the file converters on my box running Office 2003.</p> <p>I can read &amp; write Office 2007 docx files, but cannot create Excel xlsx files from within Excel. &nbsp;It isn't available from the 'Save As' dialog within Excel.  
+
+I can use 'Save As' from windows explorer to convert 2003 xls files to the 2007 xlsx format, but when opening with Excel it gets converted to 2003 xls format and again I cannot save as 2007 format.  
+
+Is it meant to work this way?</p></blockquote>
+
+<p>No, it's not meant to work that way, but you do need to make sure you read the instructions on the <a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=941B3470-3AE9-4AEE-8F43-C6BB74CD1466&amp;displaylang=en">download page for the compatibility pack</a>. In particular, this bit:  
+
+<blockquote> Ensure your system is up to date by installing all High-Priority/Required updates on <a href="http://update.microsoft.com">Microsoft Update</a> <b>(required for Microsoft Office XP and 2003 users)</b>.</p></blockquote>
+
+<p><a href="http://support.microsoft.com/kb/924074/en-us">This article</a> discusses the updates required in more detail.
+
+ 
+
+<hr>
+
+
+
+&nbsp;The <a href="http://openxmldeveloper.org/">OpenXMLDeveloper.org</a> blog is a great resource. In particular, I found these posts useful:
+
+<a href="http://openxmldeveloper.org/archive/2006/08/31/599.aspx">MSDN Articles on Open XML and Related Topics</a>&nbsp;- heaps of really good pointers to info.
+
+<a href="http://openxmldeveloper.com/articles/OPC_parts.aspx">Working with Open Packaging parts</a>&nbsp;- great article on the structure of the formats themselves which, by the way, includes the XPS format as well as the office formats.
+
+<a href="http://openxmldeveloper.org/archive/2006/11/21/ContentControlToolkit.aspx">Content Control Toolkit</a>&nbsp;- link to a project on CodePlex that allows you graphically link content in a Word document to custom XML in the document (see also Gary Sharp's info below)
+
+<hr>
+
+&nbsp;Gary Sharp came to the sessions in Melbourne and then sent me a couple of follow-ups via my blog:
+
+<blockquote> I spoke to you after the session &ndash; mentioning my interest in being able to store a custom dataset (xml) within a word document and then referencing it into the document.</p> <p>After returning to work and doing some research, I've found the mechanism you were speaking about. Namely: Xml files stored in the CustomXML folder inside the package. The contents of these files can then be referenced to "Content Controls" within a document. While I was extremely impressed by this technology (and it will no doubt appear in several applications I contribute to), I was a little disappointed that there seems to be no UI (inside the Word client itself) to be able to make these mappings.  
+
+I was hoping for something similar to the &ldquo;Insert Merge Field&rdquo; picker (although more advanced) made available to the Mail Merge feature. At the very least, I was expecting something similar to a &ldquo;Field&rdquo; so that (with training) the end user could configure where the content appeared in the document.  
+
+I was wondering if you knew of any ways to do this (other than programmatically modifying the document xml file). For example, could a (daren&rsquo;t I say) macro be used? Might office contain this UI in final release?  
+
+See comments:  
+
+<a href="http://blogs.msdn.com/modonovan/archive/2006/05/23/604704.aspx">http://blogs.msdn.com/modonovan/archive/2006/05/23/604704.aspx</a>  
+
+Resources:  
+
+<a href="http://openxmldeveloper.org/articles/463.aspx">http://openxmldeveloper.org/articles/463.aspx</a>  
+
+<a href="http://openxmldeveloper.org/articles/Mapping_Content_Controls_to_Custom_XML_Parts_using_Notepad.aspx">http://openxmldeveloper.org/articles/Mapping_Content_Controls_to_Custom_XML_Parts_using_Notepad.aspx</a>  
+
+I'd really appreciate your thoughts.</p></blockquote>
+
+<p>And then he answered his own questions:  
+
+<blockquote> I just wanted to pass on a note to say that after much 'wondering' and exploring I found more than enough information on CustomXML documents and their capabilities (Didn't want you to double-up on my work...).  
+
+I now understand the reasons why a GUI for Mapping XML to Content Controls wasn't created.  
+
+Below are some links which I found invaluable:  
+
+<a href="http://blogs.msdn.com/frice/default.aspx">http://blogs.msdn.com/frice/default.aspx</a> - For manipulating the Office Ribbon UI  
+
+<a href="http://msdn2.microsoft.com/en-us/library/ms406053.aspx">http://msdn2.microsoft.com/en-us/library/ms406053.aspx</a> - For creating templates programmatically (and thus Content Controls)  
+
+<a href="http://www.codeplex.com/Wiki/View.aspx?ProjectName=dbe">http://www.codeplex.com/Wiki/View.aspx?ProjectName=dbe</a> - Word 2007 Content Control Toolkit (absolute must-have)  
+
+<a href="https://channel9.msdn.com/ShowPost.aspx?PostID=254520">https://channel9.msdn.com/ShowPost.aspx?PostID=254520</a> - Content Controls Intro (Toolkit demo)  
+
+<a href="http://openxmldeveloper.org/articles/463.aspx">http://openxmldeveloper.org/articles/463.aspx</a> - Creating CustomXML Documents (via Packaging API)  
+
+<a href="http://openxmldeveloper.org/archive/2006/06/04/Mapping_Content_Controls_to_Custom_XML_Parts_using_Notepad.aspx">http://openxmldeveloper.org/archive/2006/06/04/Mapping_Content_Controls_to_Custom_XML_Parts_using_Notepad.aspx</a> - Content Controls to CustomXML (via Notepad)  
+
+Don't know if any of this will be useful to you - but I thought I'd pass it on (seeing it took me a while to sort the good from the bad).  
+
+Cheers,  
+
+<p>Gary Sharp</p></blockquote>
+
+<p>Thanks Gary.  
+
+<hr>
+
+And finally, <a href="http://notgartner.com">Mitch</a> sent me
+
+<blockquote> An interesting perspective on why the new office document formats are good:</p> <p><a href="http://www.popularmechanics.com/technology/industry/4201645.html?page=3">http://www.popularmechanics.com/technology/industry/4201645.html?page=3</a></p></blockquote>
+
+<p></p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>

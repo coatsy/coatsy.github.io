@@ -1,0 +1,28 @@
+<html><head>
+<meta charset='UTF-8'>
+<link href='resource/bootstrap.min.css' rel='Stylesheet' type='text/css' />
+<link href='resource/style.css' rel='Stylesheet' type='text/css' />
+</head>
+<body>
+<div id='page'>
+<h1 class='entry-title'>IISExpress - Configuration file is not well-formed XML</h1>
+ <a class='url fn n profile-usercard-hover' href='https://social.msdn.microsoft.com/profile/Andrew Coates [MSFT]' target='_blank'>Andrew Coates [MSFT]</a>
+<time>    4/22/2013 5:32:00 PM</time>
+<hr>
+<div id='content'><p><font color="#ff0000">[UPDATE 2013-04-26]</font></p>  <p>After consulting with my brains trust (thanks <a href="http://damianedwards.wordpress.com/">Damo</a>), I tried one last thing. I manually copied the folders IISExpress had created in the c:\temp\IISExpress folder back into my MyDocuments\IISExpress folder, and VS seems happy. I’m calling this one closed for now.</p>  <hr />  <p><font color="#ff0000">[UPDATE 2013-04-23]</font></p>  <p>This is only half solved. It looks like VS still insists on launching IISExpress with a specific command line switch pointing at the old config location.</p>  <hr />  <p>I installed a new machine the other day and on loading a VS project that uses IISExpress, I got the following error:</p>  <pre>Filename: \\?\UNC\[our My Docs Server]\MyDocs1\acoat\My Documents\IISExpress\config\applicationHost.config <br />Line number: 1 <br />Error: Configuration file is not well-formed XML</pre>
+
+<p>Turns out that IISExpress is writing config information to my My Documents folder, but because I’ve got folder redirection turned on, this is a UNC path, not a local path. It looks like an applicationHost.config file is created, but it’s 0 bytes and the IISExpress process doesn’t have permission to write to it.</p>
+
+<p>Fortunately, from IISExpress 8 onwards, there’s a registry key you can setr to point IISExpress at another home folder.</p>
+
+<p>Thanks to <a href="http://stackoverflow.com/questions/11445002/iis-express-8-cannot-write-configuration-file">this post on StackOverflow</a>, I was pointed to the <a href="http://www.iis.net/learn/extensions/introduction-to-iis-express/iis-80-express-readme">IIS 8.0 Express Readme FIle</a>, which, in the New Features section says:</p>
+
+<blockquote>
+  <p><strong>Changing the User Home Directory</strong></p>
+IIS 8.0 Express supports changing the user's home directory, which is mapped to the %IIS_USER_HOME% variable in configuration. By default this path is located at %UserProfile%\Documents\IISExpress, but users can change this by setting a CustomUserHome registry property in HKCU\Software\Microsoft\IISExpress, or by specifying the &quot;/userhome&quot; parameter when launching iisexpress.exe.</blockquote>
+
+<p>So, I fired up RegEdit, added a new IISExpress key under HKCU\Software\Microsoft and then added a string key CustomUserHome set to &quot;c:\Temp\IISExpress&quot; (a folder I’d created manually) and IISExpress starts in the expected manner and creates all of its config, logs and tracelogfiles folders (and their accompanying files) there and starts successfully.</p></div>
+</div></body>
+<script type='text/javascript' src='resource/jquery-1.12.1.min.js'></script>
+<script type='text/javascript' src='resource/replace.js'></script>
+</html>
