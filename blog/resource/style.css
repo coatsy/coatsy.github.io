@@ -44,6 +44,12 @@ body {
     word-wrap: break-word;
 }
 
+#info {
+    font-size: x-small;
+    font-style: italic;
+    color: rgb(180, 180, 180);
+}
+
 hr {
     margin-top: 10px;
 }
