@@ -4,6 +4,22 @@ Azure AI Search is a powerful search engine that can be used to search for infor
 
 More information about this topic is found in the [Copilot Studio Documentation](https://learn.microsoft.com/en-us/microsoft-copilot-studio/nlu-generative-answers-azure-openai)
 
+
+## Table of Contents
+
+- [Using Azure AI Search as a Copilot Studio Generative Answers Knowledge Source](#using-azure-ai-search-as-a-copilot-studio-generative-answers-knowledge-source)
+  - [Table of Contents](#table-of-contents)
+  - [Pre-requisites](#pre-requisites)
+  - [Create an Azure Open AI Service](#create-an-azure-open-ai-service)
+  - [Create an Azure Open AI Deployment](#create-an-azure-open-ai-deployment)
+  - [Create an Azure AI Search Service](#create-an-azure-ai-search-service)
+  - [Create an Index in Azure AI Search](#create-an-index-in-azure-ai-search)
+  - [Connect Copilot Studio Generative Answers to Azure AI Search](#connect-copilot-studio-generative-answers-to-azure-ai-search)
+    - [Step 1: Create a connection to Azure AI Search](#step-1-create-a-connection-to-azure-ai-search)
+    - [Step 2: Connect a Generative Answers Knowledge Source](#step-2-connect-a-generative-answers-knowledge-source)
+      - [Finding the Connection Parameters](#finding-the-connection-parameters)
+    - [Step 3: Test the Connection](#step-3-test-the-connection)
+
 ## Pre-requisites
 
 To use Azure AI Search as a Copilot Studio Generative Answers Knowledge Source, you will need to have an Azure account. If you don't have an Azure account, you can create one for free at [https://azure.microsoft.com/](https://azure.microsoft.com/).
